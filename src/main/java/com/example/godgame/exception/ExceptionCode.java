@@ -11,7 +11,8 @@ public enum ExceptionCode {
     MEMBER_EXISTS(409, "Member exists"),
     BOARD_DELETE_NOT_AVAILABLE(409, "Board delete not available"),
     COMMENT_EXISTS(409, "Comment exists"),
-    LIKE_NOT_FOUND(404, "Like not found");
+    LIKE_NOT_FOUND(404, "Like not found"),
+    PASSWORD_WRONG(400, "PASSWORD WRONG");
 
     @Getter
     private int status;

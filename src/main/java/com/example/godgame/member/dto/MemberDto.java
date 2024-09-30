@@ -77,11 +77,21 @@ public class MemberDto {
         private String newPassword;
     }
 
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class NickName{ private String nickName;}
+
+    @Getter
+    @AllArgsConstructor
+    public static class Check{ private boolean isAvailable;}
+
     @AllArgsConstructor
     @Getter
     @NoArgsConstructor
     @Setter
     public static class Response {
+        private long memberId;
         private String memberName;
         private String nickName;
         private Long totalPoint;
