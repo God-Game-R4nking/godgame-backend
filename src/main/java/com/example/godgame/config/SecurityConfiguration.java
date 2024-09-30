@@ -22,10 +22,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import java.util.Arrays;
-
-import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 public class SecurityConfiguration {
@@ -65,7 +62,7 @@ public class SecurityConfiguration {
                         .antMatchers(HttpMethod.GET, "/members/**").hasAnyRole("USER", "ADMIN")
                         .antMatchers(HttpMethod.DELETE, "/members/**").hasRole("USER")
                         .anyRequest().permitAll()
-                ).oauth2Login(withDefaults());
+                );
         return http.build();
     }
     @Bean
