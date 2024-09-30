@@ -26,7 +26,6 @@ public class JwtTokenizer {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-
     @Getter
     @Value("${jwt.key}")
     private String secretKey;

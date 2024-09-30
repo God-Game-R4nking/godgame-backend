@@ -7,8 +7,6 @@ import com.example.godgame.board.repository.BoardRepository;
 import com.example.godgame.board.service.BoardService;
 import com.example.godgame.dto.MultiResponseDto;
 import com.example.godgame.dto.SingleResponseDto;
-import com.example.godgame.exception.BusinessLogicException;
-import com.example.godgame.exception.ExceptionCode;
 import com.example.godgame.utils.UriCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

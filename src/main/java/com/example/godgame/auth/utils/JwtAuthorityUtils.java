@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class JwtAuthorityUtils {
 
     @Value("${mail.address.admin}")
-    private String adminMailAddress;
+    private String adminId;
 
     private final List<GrantedAuthority> ADMIN_ROLES =
             AuthorityUtils.createAuthorityList("ROLE_ADMIN", "ROLE_USER");
@@ -23,7 +23,7 @@ public class JwtAuthorityUtils {
     private final List<String> USER_ROLES_STRING = List.of("USER");
 
     public List<GrantedAuthority> createAuthorities(String email){
-        if(email.equals(adminMailAddress)){
+        if(email.equals(adminId)){
             return ADMIN_ROLES;
         }
         return USER_ROLES;
@@ -33,8 +33,8 @@ public class JwtAuthorityUtils {
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toList());
     }
-    public List<String> createRoles(String email){
-        if(email.equals(adminMailAddress)){
+    public List<String> createRoles(String id){
+        if(id.equals(adminId)){
             return ADMIN_ROLES_STRING;
         }
         return USER_ROLES_STRING;
