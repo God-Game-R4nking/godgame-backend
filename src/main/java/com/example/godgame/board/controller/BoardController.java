@@ -9,6 +9,7 @@ import com.example.godgame.dto.MultiResponseDto;
 import com.example.godgame.dto.SingleResponseDto;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.exception.ExceptionCode;
+import com.example.godgame.utils.UriCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -22,7 +23,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/boars")
+@RequestMapping("/boards")
 @Validated
 @Slf4j
 public class BoardController {
@@ -39,9 +40,9 @@ public class BoardController {
     }
 
     @PostMapping
-    public ResponseEntity postBoard(@Valid @RequestBody BoardDto.Post boardPostDto) {
+    public ResponseEntity postBoard(@Valid @RequestBody BoardDto.Post requestBody) {
 
-        Board board = boardMapper.boardPostDtoToBoard(boardPostDto);
+        Board board = boardMapper.boardPostDtoToBoard(requestBody);
         Board createdBoard = boardService.createBoard(board);
         URI location = UriCreator.createUri(BOARD_DEFAULT_URL, createdBoard.getBoardId());
         return ResponseEntity.created(location).build();
@@ -49,11 +50,11 @@ public class BoardController {
 
     @PatchMapping("/{board-id}")
     public ResponseEntity patchBoard(@PathVariable("board-id") @Positive long boardId,
-                                     @Valid @RequestBody BoardDto.Patch boardPatchDto) {
+                                     @Valid @RequestBody BoardDto.Patch requestBody) {
 
-        boardPatchDto.setBoardId(boardId);
+        requestBody.setBoardId(boardId);
 
-        Board updatedBoard = boardService.updateBoard(boardMapper.boardPatchDtoToBoard(boardPatchDto));
+        Board updatedBoard = boardService.updateBoard(boardMapper.boardPatchDtoToBoard(requestBody));
 
         return new ResponseEntity<>(new SingleResponseDto<>(boardMapper.boardToResponseDto(updatedBoard)), HttpStatus.OK);
     }

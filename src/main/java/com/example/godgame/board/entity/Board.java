@@ -1,5 +1,7 @@
 package com.example.godgame.board.entity;
 
+import com.example.godgame.comment.entity.Comment;
+import com.example.godgame.member.entity.Member;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
