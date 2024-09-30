@@ -9,6 +9,7 @@ import org.mapstruct.ReportingPolicy;
 public interface MemberMapper {
     default Member memberPostToMember(MemberDto.Post requestBody){
         Member member = new Member();
+        member.setId(requestBody.getId());
         member.setMemberName(requestBody.getMemberName());
         member.setNickName(requestBody.getNickName());
         member.setPassword(requestBody.getPassword());

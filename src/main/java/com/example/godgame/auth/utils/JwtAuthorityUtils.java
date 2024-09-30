@@ -22,8 +22,8 @@ public class JwtAuthorityUtils {
     private final List<String> ADMIN_ROLES_STRING = List.of("ADMIN", "USER");
     private final List<String> USER_ROLES_STRING = List.of("USER");
 
-    public List<GrantedAuthority> createAuthorities(String email){
-        if(email.equals(adminId)){
+    public List<GrantedAuthority> createAuthorities(String id){
+        if(id.equals(adminId)){
             return ADMIN_ROLES;
         }
         return USER_ROLES;
