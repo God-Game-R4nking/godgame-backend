@@ -31,6 +31,7 @@ public interface MemberMapper {
 
     default MemberDto.Response memberToMemberResponse(Member member){
         MemberDto.Response response = new MemberDto.Response();
+        response.setMemberId(member.getMemberId());
         response.setMemberStatus(member.getMemberStatus());
         response.setMemberName(member.getMemberName());
         response.setNickName(member.getNickName());
