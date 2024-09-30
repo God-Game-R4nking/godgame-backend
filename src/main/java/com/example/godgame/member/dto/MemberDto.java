@@ -10,6 +10,7 @@ import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -22,6 +23,7 @@ public class MemberDto {
         private String id;
 
         @NotBlank
+        @Size(min = 8, max = 20)
         private String password;
 
         @Pattern(regexp = "^[가-힣]{1,10}$", message = "이름은 한글로 1자 이상 10자 이하이어야 합니다.")

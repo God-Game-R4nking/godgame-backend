@@ -23,7 +23,6 @@ public class Member {
     private String id;
 
     @Column(nullable = false, length = 100)
-    @Size(min = 8, max = 20)
     private String password;
 
     @Column(nullable = false, length = 10)
