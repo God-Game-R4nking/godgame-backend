@@ -1,5 +1,7 @@
 package com.example.godgame.board.dto;
 
+import com.example.godgame.board.entity.Board;
+import com.example.godgame.comment.entity.Comment;
 import com.sun.istack.NotNull;
 import lombok.*;
 
@@ -11,9 +13,6 @@ public class BoardDto {
     @Getter
     @AllArgsConstructor
     public static class Post {
-
-        @NotNull
-        private String boardId;
 
         @NotBlank
         private String title;
@@ -36,7 +35,9 @@ public class BoardDto {
         private String content;
 
         @NotNull
-        private String boardStatus;
+        private Board.BoardStatus boardStatus;
+
+        public void setBoardId(long boardId) { this.boardId = boardId;}
     }
 
     @Getter
@@ -46,9 +47,11 @@ public class BoardDto {
         private long boardId;
         private String title;
         private String content;
-        private String boardStatus;
+        private Board.BoardStatus boardStatus;
         private long memberId;
         private List<Comment> comments;
+
+        public String getBoardStatus() {return boardStatus.getStatus();}
 
     }
 }
