@@ -73,7 +73,7 @@ public class MemberService {
     public Member findMember(long memberId, String email) {
         // TODO should business logic
         //throw new BusinessLogicException(ExceptionCode.NOT_IMPLEMENTATION);
-        findVerifiedMember(memberId);
+//        findVerifiedMember(memberId);
         return findVerifiedMember(email);
     }
 
