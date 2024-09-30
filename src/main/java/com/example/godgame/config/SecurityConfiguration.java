@@ -1,14 +1,13 @@
 package com.example.godgame.config;
 
-
-import com.springboot.auth.filter.JwtAuthenticationFilter;
-import com.springboot.auth.filter.JwtVerificationFilter;
-import com.springboot.auth.handler.MemberAccessDeniedHandler;
-import com.springboot.auth.handler.MemberAuthenticationEntryPoint;
-import com.springboot.auth.handler.MemberAuthenticationFailureHandler;
-import com.springboot.auth.handler.MemberAuthenticationSuccessHandler;
-import com.springboot.auth.jwt.JwtTokenizer;
-import com.springboot.auth.utils.JwtAuthorityUtils;
+import com.example.godgame.auth.filter.JwtVerificationFilter;
+import com.example.godgame.auth.handler.MemberAccessDeniedHandler;
+import com.example.godgame.auth.handler.MemberAuthenticationEntryPoint;
+import com.example.godgame.auth.handler.MemberAuthenticationFailureHandler;
+import com.example.godgame.auth.handler.MemberAuthenticationSuccessHandler;
+import com.example.godgame.auth.jwt.JwtTokenizer;
+import com.example.godgame.auth.utils.JwtAuthorityUtils;
+import com.example.godgame.auth.filter.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,7 +18,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -66,15 +64,6 @@ public class SecurityConfiguration {
                         .antMatchers(HttpMethod.GET, "/members").hasRole("ADMIN")
                         .antMatchers(HttpMethod.GET, "/members/**").hasAnyRole("USER", "ADMIN")
                         .antMatchers(HttpMethod.DELETE, "/members/**").hasRole("USER")
-                        .antMatchers(HttpMethod.POST, "/dreams/**/comments").hasRole("USER")
-                        .antMatchers(HttpMethod.PATCH, "/comments/**").hasRole("USER")
-                        .antMatchers(HttpMethod.DELETE, "/dreams/**/comments/**").hasRole("USER")
-                        .antMatchers(HttpMethod.PATCH, "/dreams/**").hasRole("USER")
-                        .antMatchers(HttpMethod.DELETE, "/dreams/**").hasRole("USER")
-                        .antMatchers(HttpMethod.POST, "/auth/logout").hasAnyRole("USER", "ADMIN")
-                        .antMatchers(HttpMethod.PATCH, "/dreams/**").hasRole("USER")
-                        .antMatchers(HttpMethod.DELETE, "/dreams/**").hasRole("USER")
-                        .antMatchers(HttpMethod.POST, "/dreams/**/sharing").hasRole("USER")
                         .anyRequest().permitAll()
                 ).oauth2Login(withDefaults());
         return http.build();
@@ -89,7 +78,7 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PATCH", "DELETE"));
-        configuration.addAllowedOrigin("http://dream-high.s3-website.ap-northeast-2.amazonaws.com");
+        configuration.addAllowedOrigin("https://localhost:3000");
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Refresh"));
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
@@ -113,8 +102,8 @@ public class SecurityConfiguration {
             JwtVerificationFilter jwtVerificationFilter =
                     new JwtVerificationFilter(jwtTokenizer,authorityUtils,redisTemplate);
             builder.addFilter(jwtAuthenticationFilter)
-                    .addFilterAfter(jwtVerificationFilter, JwtAuthenticationFilter.class)
-                    .addFilterAfter(jwtVerificationFilter, OAuth2LoginAuthenticationFilter.class);
+                    .addFilterAfter(jwtVerificationFilter, JwtAuthenticationFilter.class);
+//                    .addFilterAfter(jwtVerificationFilter, OAuth2LoginAuthenticationFilter.class);
         }
     }
 }

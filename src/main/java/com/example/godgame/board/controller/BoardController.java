@@ -83,11 +83,11 @@ public class BoardController {
 
         Board board = boardService.findBoard(boardId);
 
-        if(boardService.verifiedMemberId(boardId, memberId)) {
-           boardService.deleteBoard(boardId);
-        } else {
-            throw new BusinessLogicException(ExceptionCode.BOARD_DELETE_NOT_AVAILABLE);
-        }
+//        if(boardService.verifiedMemberId(boardId, memberId)) {
+//           boardService.deleteBoard(boardId);
+//        } else {
+//            throw new BusinessLogicException(ExceptionCode.BOARD_DELETE_NOT_AVAILABLE);
+//        }
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
