@@ -1,4 +1,4 @@
-package com.example.godgame.history;
+package com.example.godgame.history.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,5 +24,5 @@ public class GameRoomHistory {
 
     @Column
     private LocalDateTime createdAt = LocalDateTime.now();
-    
+
 }

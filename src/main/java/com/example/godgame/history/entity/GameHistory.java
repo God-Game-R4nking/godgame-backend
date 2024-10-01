@@ -1,4 +1,4 @@
-package com.example.godgame.history;
+package com.example.godgame.history.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,10 +13,10 @@ import java.time.LocalDateTime;
 @Entity
 // 게임이 시작될 때 POST 요청으로 생성
 // 게임이 종료 될 때 PATCH 요청으로 수정 하여 매 라운드가 끝날 떄 기록
-public class History {
+public class GameHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long historyId;
+    private long GameHistoryId;
 
     @Column
     private long memberId;
