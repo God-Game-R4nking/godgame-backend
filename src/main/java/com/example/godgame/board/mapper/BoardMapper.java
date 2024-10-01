@@ -9,11 +9,10 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface BoardMapper {
-//    @Mapping(source = "member",target = "member.memberId")
+    @Mapping(source = "memberId",target = "member.memberId")
     Board boardPostDtoToBoard(BoardDto.Post postDto);
     Board boardPatchDtoToBoard(BoardDto.Patch patchDto);
-//    @Mapping(source = "comment.commentContent",target = "commentContent")
-//    @Mapping(source = "member.memberId",target = "memberId")
+    @Mapping(source = "member.memberId",target = "memberId")
     BoardDto.Response boardToResponseDto(Board board);
     List<BoardDto.Response> boardsToResponseDtos(List<Board> boards);
 }
