@@ -19,6 +19,8 @@ public class BoardDto {
 
         @NotBlank
         private String content;
+
+        private Long memberId;
     }
 
     @Getter
