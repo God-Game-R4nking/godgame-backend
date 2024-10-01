@@ -5,6 +5,8 @@ import com.example.godgame.member.entity.Member;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MemberMapper {
     default Member memberPostToMember(MemberDto.Post requestBody){
@@ -42,4 +44,6 @@ public interface MemberMapper {
 
         return response;
     }
+
+    List<MemberDto.Response> memberToMemberResponseDtos(List<Member> members);
 }

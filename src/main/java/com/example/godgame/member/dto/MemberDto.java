@@ -81,6 +81,23 @@ public class MemberDto {
 
     @Getter
     @Setter
+    public class ResidentVerificationRequest {
+        private String phoneNo;
+        private String userName;
+        private String identity;
+        private String issueDate;
+    }
+
+    @Getter
+    @Setter
+    public class CodeFResponse {
+        private boolean valid; // 진위 확인 결과
+        // 필요한 경우, 추가적인 필드도 정의
+    }
+
+
+    @Getter
+    @Setter
     @AllArgsConstructor
     public static class NickName{ private String nickName;}
 

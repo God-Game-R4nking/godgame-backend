@@ -1,5 +1,6 @@
 package com.example.godgame.member.controller;
 
+import com.example.godgame.dto.MultiResponseDto;
 import com.example.godgame.dto.SingleResponseDto;
 import com.example.godgame.member.dto.MemberDto;
 import com.example.godgame.member.entity.Member;
@@ -7,6 +8,7 @@ import com.example.godgame.member.mapper.MemberMapper;
 import com.example.godgame.member.service.MemberService;
 import com.example.godgame.utils.UriCreator;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @Slf4j
@@ -73,8 +76,18 @@ public class MemberController {
         String email = authentication.getName();
         Member member = memberService.findMember(memberId, email);
 
-       return null;
+
+       return new ResponseEntity(new SingleResponseDto<>(mapper.memberToMemberResponse(member)), HttpStatus.OK);
     }
+
+    @GetMapping
+    public ResponseEntity getMembers(@Positive @RequestParam int page,
+                                     @Positive @RequestParam int size){
+        Page<Member> pageMembers = memberService.findALlMember(page - 1, size);
+        List<Member> members = pageMembers.getContent();
+        return new ResponseEntity(new MultiResponseDto<>(mapper.memberToMemberResponseDtos(members),pageMembers), HttpStatus.OK);
+    }
+
 
     @GetMapping("/check-nickName")
     public ResponseEntity nickNameAvailability(@RequestBody MemberDto.NickName requestBody){
@@ -85,6 +98,18 @@ public class MemberController {
 
         return new ResponseEntity<>(
                 new SingleResponseDto<>(responseDto), HttpStatus.OK);
+    }
+
+    @PostMapping("/verify-resident-registration")
+    public ResponseEntity<Boolean> verifyResidentRegistration(
+            @RequestBody MemberDto.ResidentVerificationRequest request) {
+        boolean isValid = memberService.verifyResidentRegistration(
+                request.getPhoneNo(),
+                request.getUserName(),
+                request.getIdentity(),
+                request.getIssueDate()
+        );
+        return ResponseEntity.ok(isValid);
     }
 
 
