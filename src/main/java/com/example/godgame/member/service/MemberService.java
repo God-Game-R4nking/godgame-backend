@@ -4,15 +4,26 @@ import com.example.godgame.auth.utils.JwtAuthorityUtils;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.exception.ExceptionCode;
 import com.example.godgame.helper.event.MemberRegistrationApplicationEvent;
+import com.example.godgame.member.dto.MemberDto;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.repository.MemberRepository;
+import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Transactional
@@ -22,12 +33,22 @@ public class MemberService {
     private final ApplicationEventPublisher publisher;
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthorityUtils authorityUtils;
+    private final RestTemplate restTemplate;
 
-    public MemberService(MemberRepository memberRepository, ApplicationEventPublisher publisher, PasswordEncoder passwordEncoder, JwtAuthorityUtils authorityUtils) {
+    @Getter
+    @Value("${codef.api.key}")
+    private String apiKey;
+
+    @Getter
+    @Value("${codef.api.url}")
+    private String apiUrl;
+
+    public MemberService(MemberRepository memberRepository, ApplicationEventPublisher publisher, PasswordEncoder passwordEncoder, JwtAuthorityUtils authorityUtils, RestTemplate restTemplate) {
         this.memberRepository = memberRepository;
         this.publisher = publisher;
         this.passwordEncoder = passwordEncoder;
         this.authorityUtils = authorityUtils;
+        this.restTemplate = restTemplate;
     }
 
     public Member createMember(Member member) {
@@ -70,14 +91,14 @@ public class MemberService {
         return memberRepository.save(findMember);
     }
 
-    public Member findMember(long memberId, String email) {
+    public Member findMember(long memberId, String id) {
         // TODO should business logic
-        //throw new BusinessLogicException(ExceptionCode.NOT_IMPLEMENTATION);
-//        findVerifiedMember(memberId);
-        return findVerifiedMember(email);
+        return findVerifiedMember(id);
     }
 
-
+    public Page<Member> findALlMember(int page, int size){
+        return memberRepository.findAll(PageRequest.of(page,size, Sort.by("memberId").descending()));
+    }
 
 
     public void deleteMember(String id){
@@ -85,6 +106,40 @@ public class MemberService {
         findMember.setMemberStatus(Member.MemberStatus.MEMBER_QUIT);
 
         memberRepository.save(findMember);
+    }
+
+    // 주민등록번호 진위 확인 메서드 추가
+    public boolean verifyResidentRegistration(String phoneNo, String userName, String identity, String issueDate) {
+        String url = apiUrl;
+
+        // 요청 객체 생성
+        Map<String, Object> request = new HashMap<>();
+        request.put("organization", "0002");
+        request.put("loginType", "6");
+        request.put("loginTypeLevel", "1");
+        request.put("telecom", "");
+        request.put("phoneNo", phoneNo);
+        request.put("loginUserName", userName);
+        request.put("loginIdentity", identity);
+        request.put("loginBirthDate", "");
+        request.put("birthDate", "");
+        request.put("identity", identity);
+        request.put("userName", userName);
+        request.put("issueDate", issueDate);
+        request.put("identityEncYn", "");
+
+        // POST 요청 전송 및 응답 받기
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            Map<String, Object> responseBody = response.getBody();
+            // 진위 여부 확인
+            if (responseBody != null && responseBody.containsKey("result")) {
+                Map<String, Object> result = (Map<String, Object>) responseBody.get("result");
+                return (Boolean) result.get("isValid"); // 유효성 여부 반환
+            }
+        }
+        return false; // 기본적으로 false 반환
     }
 
     public void verifyPassword(String id, String password, String newPassword){
