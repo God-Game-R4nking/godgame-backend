@@ -100,17 +100,5 @@ public class MemberController {
                 new SingleResponseDto<>(responseDto), HttpStatus.OK);
     }
 
-    @PostMapping("/verify-resident-registration")
-    public ResponseEntity<Boolean> verifyResidentRegistration(
-            @RequestBody MemberDto.ResidentVerificationRequest request) {
-        boolean isValid = memberService.verifyResidentRegistration(
-                request.getPhoneNo(),
-                request.getUserName(),
-                request.getIdentity(),
-                request.getIssueDate()
-        );
-        return ResponseEntity.ok(isValid);
-    }
-
 
 }
