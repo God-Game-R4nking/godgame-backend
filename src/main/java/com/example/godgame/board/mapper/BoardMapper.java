@@ -2,6 +2,7 @@ package com.example.godgame.board.mapper;
 
 import com.example.godgame.board.dto.BoardDto;
 import com.example.godgame.board.entity.Board;
+import com.example.godgame.comment.entity.Comment;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -15,4 +16,5 @@ public interface BoardMapper {
     @Mapping(source = "member.memberId",target = "memberId")
     BoardDto.Response boardToResponseDto(Board board);
     List<BoardDto.Response> boardsToResponseDtos(List<Board> boards);
+    BoardDto.CommentResponseDto commentToBoardResponseDto(Comment comment);
 }

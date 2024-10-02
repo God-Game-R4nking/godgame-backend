@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.Column;
+import java.time.LocalDateTime;
 
 public class CommentDto {
 
@@ -39,6 +40,9 @@ public class CommentDto {
     public static class Response {
 
         private long commentId;
+        private long boardId;
         private String commentContent;
+        private LocalDateTime createdAt;
+        private LocalDateTime modifiedAt;
     }
 }

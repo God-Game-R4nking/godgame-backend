@@ -5,6 +5,8 @@ import com.example.godgame.board.entity.Board;
 import com.example.godgame.board.mapper.BoardMapper;
 import com.example.godgame.board.repository.BoardRepository;
 import com.example.godgame.board.service.BoardService;
+import com.example.godgame.comment.entity.Comment;
+import com.example.godgame.comment.service.CommentService;
 import com.example.godgame.dto.MultiResponseDto;
 import com.example.godgame.dto.SingleResponseDto;
 import com.example.godgame.utils.UriCreator;
@@ -30,40 +32,44 @@ public class BoardController {
     private final static String BOARD_DEFAULT_URL = "/boards";
     private final BoardService boardService;
     private final BoardMapper boardMapper;
-    private final BoardRepository boardRepository;
+    private final CommentService commentService;
 
-    public BoardController(BoardService boardService, BoardMapper boardMapper, BoardRepository boardRepository) {
+    public BoardController(BoardService boardService, BoardMapper boardMapper, CommentService commentService) {
         this.boardService = boardService;
         this.boardMapper = boardMapper;
-        this.boardRepository = boardRepository;
+        this.commentService = commentService;
     }
 
     @PostMapping
-    public ResponseEntity postBoard(@Valid @RequestBody BoardDto.Post requestBody) {
+    public ResponseEntity postBoard(@Valid @RequestBody BoardDto.Post requestBody, Authentication authentication) {
 
         Board board = boardMapper.boardPostDtoToBoard(requestBody);
-        Board createdBoard = boardService.createBoard(board);
+        Board createdBoard = boardService.createBoard(board, authentication);
         URI location = UriCreator.createUri(BOARD_DEFAULT_URL, createdBoard.getBoardId());
         return ResponseEntity.created(location).build();
     }
 
     @PatchMapping("/{board-id}")
     public ResponseEntity patchBoard(@PathVariable("board-id") @Positive long boardId,
-                                     @Valid @RequestBody BoardDto.Patch requestBody) {
+                                     @Valid @RequestBody BoardDto.Patch requestBody,
+                                     Authentication authentication) {
 
         requestBody.setBoardId(boardId);
 
-        Board updatedBoard = boardService.updateBoard(boardMapper.boardPatchDtoToBoard(requestBody));
+        Board updatedBoard = boardService.updateBoard(boardMapper.boardPatchDtoToBoard(requestBody), authentication);
 
         return new ResponseEntity<>(new SingleResponseDto<>(boardMapper.boardToResponseDto(updatedBoard)), HttpStatus.OK);
     }
 
     @GetMapping("/{board-id}")
-    public ResponseEntity getBoard(@PathVariable("board-id") @Positive long boardId) {
+    public ResponseEntity getBoard(@PathVariable("board-id") @Positive long boardId,
+                                               @Positive @RequestParam int page,
+                                               @Positive @RequestParam int size) {
 
-        Board getBoard = boardService.findBoard(boardId);
+        // 게시글과 댓글을 함께 조회
+        BoardDto.Response boardWithComments = boardService.getBoardWithComments(boardId, page, size);
 
-        return new ResponseEntity<>(new SingleResponseDto<>(boardMapper.boardToResponseDto(getBoard)), HttpStatus.OK);
+        return new ResponseEntity<>(new SingleResponseDto<>(boardWithComments), HttpStatus.OK);
     }
 
     @GetMapping
@@ -78,16 +84,18 @@ public class BoardController {
     }
 
     @DeleteMapping("{board-id}")
-    public ResponseEntity deleteBoard(@PathVariable("board-id") long boardId) {
+    public ResponseEntity deleteBoard(@PathVariable("board-id") long boardId, Authentication authentication) {
 
-        Board board = boardService.findBoard(boardId);
-
-//        if(boardService.verifiedMemberId(boardId, memberId)) {
-//           boardService.deleteBoard(boardId);
-//        } else {
-//            throw new BusinessLogicException(ExceptionCode.BOARD_DELETE_NOT_AVAILABLE);
-//        }
+        boardService.deleteBoard(boardId, authentication);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+//    @GetMapping("/{board-id}")
+//    public ResponseEntity getBoard(@PathVariable("board-id") @Positive long boardId, int page, int size) {
+//
+//        Board getBoard = boardService.findBoard(boardId);
+//        Page<Comment> comments = commentService.findComments(boardId, page, size);
+//        return new ResponseEntity<>(new SingleResponseDto<>(boardMapper.boardToResponseDto(getBoard)), HttpStatus.OK);
+//    }
 }
