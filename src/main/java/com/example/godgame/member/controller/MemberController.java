@@ -6,6 +6,7 @@ import com.example.godgame.member.dto.MemberDto;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.mapper.MemberMapper;
 import com.example.godgame.member.service.MemberService;
+import com.example.godgame.ranking.entity.Ranking;
 import com.example.godgame.utils.UriCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -39,6 +40,7 @@ public class MemberController {
 
         Member member = mapper.memberPostToMember(requestBody);
         Member createdMember = memberService.createMember(member);
+
         URI location = UriCreator.createUri("/members", createdMember.getMemberId());
 
         return ResponseEntity.created(location).build();
@@ -99,19 +101,5 @@ public class MemberController {
         return new ResponseEntity<>(
                 new SingleResponseDto<>(responseDto), HttpStatus.OK);
     }
-
-
-   @PostMapping("/verify-resident-registration")
-   public ResponseEntity<Boolean> verifyResidentRegistration(
-           @RequestBody MemberDto.ResidentVerificationRequest request) {
-       boolean isValid = memberService.verifyResidentRegistration(
-               request.getPhoneNo(),
-               request.getUserName(),
-               request.getIdentity(),
-               request.getIssueDate()
-       );
-       return ResponseEntity.ok(isValid);
-   }
-
 
 }
