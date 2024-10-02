@@ -9,8 +9,9 @@ public enum ExceptionCode {
     BOARD_NOT_VIEWABLE(404, "Board not viewable"),
     MEMBER_NOT_FOUND(404, "Member not found"),
     MEMBER_EXISTS(409, "Member exists"),
-    BOARD_DELETE_NOT_AVAILABLE(409, "Board delete not available"),
+    MEMBER_NOT_ALLOWED(404, "Member not allowed"),
     COMMENT_EXISTS(409, "Comment exists"),
+    COMMENT_ALREADY_DELETED(404, "Comment already deleted"),
     LIKE_NOT_FOUND(404, "Like not found"),
     PASSWORD_WRONG(400, "PASSWORD WRONG");
 

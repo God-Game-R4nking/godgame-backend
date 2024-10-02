@@ -9,6 +9,7 @@ import com.example.godgame.utils.UriCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,9 +34,9 @@ public class CommentController {
     }
 
     @PostMapping
-    public ResponseEntity postComment(@Valid @RequestBody CommentDto.Post requestBody) {
+    public ResponseEntity postComment(@Valid @RequestBody CommentDto.Post requestBody, Authentication authentication) {
         Comment comment = commentMapper.commentPostDtoToComment(requestBody);
-        Comment createdComment = commentService.createComment(comment);
+        Comment createdComment = commentService.createComment(comment, authentication);
         URI location = UriCreator.createUri(COMMENT_DEFAULT_URL, createdComment.getCommentId());
 
         return ResponseEntity.created(location).build();
@@ -43,19 +44,20 @@ public class CommentController {
 
     @PatchMapping("/{comment-id}")
     public ResponseEntity patchComment(@PathVariable("comment-id") @Positive long commentId,
-                                       @Valid @RequestBody CommentDto.Patch requestBody){
+                                       @Valid @RequestBody CommentDto.Patch requestBody,
+                                       Authentication authentication){
         requestBody.setCommentId(commentId);
 
-        Comment comment = commentService.updateComment(commentMapper.commentPatchDtoToComment(requestBody));
+        Comment comment = commentService.updateComment(commentMapper.commentPatchDtoToComment(requestBody), authentication);
 
         return new ResponseEntity<>(
-                new SingleResponseDto<>(commentMapper.commentToResponseDto(comment)), HttpStatus.OK);
+                new SingleResponseDto<>(commentMapper.commentToBoardResponseDto(comment)), HttpStatus.OK);
     }
 
     @DeleteMapping("/{comment-id}")
-    public ResponseEntity deleteComment(@PathVariable("comment-id") @Positive long commentId){
+    public ResponseEntity deleteComment(@PathVariable("comment-id") @Positive long commentId, Authentication authentication){
 
-        commentService.deleteComment(commentId);
+        commentService.deleteComment(commentId, authentication);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

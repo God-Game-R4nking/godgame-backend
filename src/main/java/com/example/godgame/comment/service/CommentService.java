@@ -6,9 +6,15 @@ import com.example.godgame.comment.entity.Comment;
 import com.example.godgame.comment.repository.CommentRepository;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.exception.ExceptionCode;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Transactional
@@ -24,7 +30,7 @@ public class CommentService {
     }
 
     @Transactional
-    public Comment createComment(Comment comment) {
+    public Comment createComment(Comment comment, Authentication authentication) {
 
         Optional<Board> optionalBoard = boardRepository.findById(comment.getBoard().getBoardId());
         Board findBoard = optionalBoard.orElseThrow(()-> new BusinessLogicException(ExceptionCode.BOARD_NOT_FOUND));
@@ -34,17 +40,37 @@ public class CommentService {
     }
 
     @Transactional
-    public Comment updateComment(Comment comment) {
+    public Comment updateComment(Comment comment, Authentication authentication) {
         Comment findComment = findVerifiedComment(comment.getCommentId());
+        verifiedMemberByComment(comment, authentication);
+        if(comment.getCommentStatus().getStatus().equals("삭제 댓글")) {
+            throw new BusinessLogicException(ExceptionCode.COMMENT_ALREADY_DELETED);
+        }
 
         Optional.ofNullable(comment.getCommentContent())
                 .ifPresent(content -> findComment.setCommentContent(content));
+        findComment.setModifiedAt(LocalDateTime.now());
 
         return commentRepository.save(findComment);
     }
 
-    public void deleteComment(long commentId) {
+    public Comment findComment(long commentId) {
+        Comment comment = findVerifiedComment(commentId);
+        if(comment.getCommentStatus().getStatus().equals("삭제 댓글")) {
+            throw new BusinessLogicException(ExceptionCode.COMMENT_ALREADY_DELETED);
+        }
+        return comment;
+    }
+
+    public Page<Comment> findComments(long boardId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("commentId").descending());
+        return commentRepository.findByBoardId(boardId, pageable);
+    }
+
+    public void deleteComment(long commentId, Authentication authentication) {
         Comment findComment = findVerifiedComment(commentId);
+        verifiedMemberByCommentId(commentId, authentication);
+        findComment.setModifiedAt(LocalDateTime.now());
 
         commentRepository.delete(findComment);
     }
@@ -52,15 +78,27 @@ public class CommentService {
     @Transactional(readOnly = true)
     public Comment findVerifiedComment(long commentId) {
         Optional<Comment> optionalComment = commentRepository.findById(commentId);
-        Comment fineComment = optionalComment.orElseThrow(()->
+        Comment findComment = optionalComment.orElseThrow(()->
                 new BusinessLogicException(ExceptionCode.COMMENT_EXISTS));
-        return fineComment;
+        return findComment;
     }
 
-    public Board findBoard(long boardId) {
-        Optional<Board> optionalBoard = boardRepository.findById(boardId);
-        Board findBoard = optionalBoard.orElseThrow(()->
-                new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
-        return findBoard;
+    public boolean verifiedMemberByComment(Comment comment, Authentication authentication) {
+        Comment findComment = findComment(comment.getCommentId());
+        if(findComment.getMember().getMemberId() == (long) authentication.getPrincipal()) {
+            return true;
+        } else {
+            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_ALLOWED);
+        }
     }
+
+    public boolean verifiedMemberByCommentId(long commentId, Authentication authentication) {
+        Comment findComment = findComment(commentId);
+        if(findComment.getMember().getMemberId() == (long) authentication.getPrincipal()) {
+            return true;
+        } else {
+            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_ALLOWED);
+        }
+    }
+
 }
