@@ -26,7 +26,7 @@ public class RedisRepositoryConfig {
 
     /**
      * RedisConnectionFactory 빈을 생성하는 메서드
-     *
+     * <p>
      * RedisConnectionFactory는 Redis 서버와의 연결을 관리하는 역할을 합니다.
      * Spring Data Redis는 이 팩토리를 통해 Redis 서버와의 모든 상호작용을 수행합니다.
      * RedisStandaloneConfiguration을 사용하여 Redis가 하나의 인스턴스(Standalone)로
@@ -51,13 +51,13 @@ public class RedisRepositoryConfig {
 
     /**
      * RedisTemplate 빈을 생성하는 메서드
-     *
+     * <p>
      * RedisTemplate은 Redis 서버와 데이터를 읽고 쓰기 위한 주요 인터페이스입니다.
      * Spring에서 제공하는 RedisTemplate은 Redis의 모든 자료 구조(문자열, 해시, 리스트, 집합 등)에 대해
      * 다양한 작업을 수행할 수 있는 방법을 제공합니다.
      * RedisTemplate은 제네릭을 사용하여 키와 값의 타입을 지정할 수 있으며, 이 예제에서는 키와 값을
      * 모두 문자열로 직렬화하도록 설정되어 있습니다.
-     *
+     * <p>
      * RedisTemplate은 내부적으로 RedisConnectionFactory를 사용하여 Redis 서버와 통신합니다.
      * 이 템플릿을 통해 Redis에 데이터를 저장하고 검색할 수 있습니다.
      *
@@ -77,26 +77,23 @@ public class RedisRepositoryConfig {
         // 이 설정은 Redis에 데이터를 저장할 때 직렬화 방식을 지정하는 것으로, 데이터 저장 형식을 정의합니다.
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new StringRedisSerializer());
+
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
 
         return redisTemplate; // RedisTemplate 빈 반환
     }
-    @Bean
-    public RedisTemplate<Long, GameRoom> redisGameRoomTemplate() {
-        // RedisTemplate 객체를 생성합니다.
-        RedisTemplate<Long, GameRoom> redisTemplate = new RedisTemplate<>();
 
-        // RedisConnectionFactory를 RedisTemplate에 설정합니다.
-        // RedisTemplate이 Redis 서버와의 연결을 사용할 수 있도록 해줍니다.
+    @Bean
+    public RedisTemplate<String, Object> redisGameRoomTemplate() {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory());
 
-        // Redis의 키와 값을 직렬화하는 방식을 설정합니다.
-        // 여기서는 StringRedisSerializer를 사용하여 키와 값을 문자열로 직렬화합니다.
-        // 이 설정은 Redis에 데이터를 저장할 때 직렬화 방식을 지정하는 것으로, 데이터 저장 형식을 정의합니다.
+        // 키는 문자열로 직렬화
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new StringRedisSerializer());
+
+        // 값은 JSON 형식으로 직렬화
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
 
-        return redisTemplate; // RedisTemplate 빈 반환
+        return redisTemplate;
     }
 }

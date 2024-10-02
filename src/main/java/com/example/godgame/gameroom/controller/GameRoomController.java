@@ -22,8 +22,8 @@ public class GameRoomController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PostMapping("/{roomName}/join")
-    public ResponseEntity<Void> joinGame(@PathVariable long gameRoomId, @RequestParam Long memberId) {
+    @PostMapping("/{gameRoom-id}/join/{member-id}")
+    public ResponseEntity<Void> joinGame(@PathVariable("gameRoom-id") long gameRoomId, @PathVariable("member-id") Long memberId) {
         if (gameRoomService.joinGame(gameRoomId, memberId)) {
             return ResponseEntity.ok().build();
         }
