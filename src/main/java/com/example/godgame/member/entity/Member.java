@@ -1,5 +1,7 @@
 package com.example.godgame.member.entity;
 
+import com.example.godgame.board.entity.Board;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -55,6 +57,10 @@ public class Member {
 
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member")
+    @JsonManagedReference
+    private List<Board> boards = new ArrayList<>();
 
 
     public enum MemberStatus {
