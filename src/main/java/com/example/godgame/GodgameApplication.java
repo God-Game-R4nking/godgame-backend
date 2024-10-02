@@ -13,6 +13,7 @@ public class GodgameApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(GodgameApplication.class, args);
+		System.out.println("시작");
 	}
 
 }

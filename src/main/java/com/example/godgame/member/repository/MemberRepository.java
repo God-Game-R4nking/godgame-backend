@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findById(String id);
+    Optional<Member> findByPhone(String phone);
     Page<Member> findAll(Pageable pageable);
     boolean existsByNickName(String nickName);
 }
