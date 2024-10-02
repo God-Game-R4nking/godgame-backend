@@ -35,13 +35,13 @@ public class MemberService {
     private final JwtAuthorityUtils authorityUtils;
     private final RestTemplate restTemplate;
 
-    @Getter
-    @Value("${codef.api.key}")
-    private String apiKey;
+//    @Getter
+//    @Value("${codef.api.key}")
+//    private String apiKey;
 
-    @Getter
-    @Value("${codef.api.url}")
-    private String apiUrl;
+//    @Getter
+//    @Value("${codef.api.url}")
+//    private String apiUrl;
 
     public MemberService(MemberRepository memberRepository, ApplicationEventPublisher publisher, PasswordEncoder passwordEncoder, JwtAuthorityUtils authorityUtils, RestTemplate restTemplate) {
         this.memberRepository = memberRepository;
@@ -109,38 +109,38 @@ public class MemberService {
     }
 
     // 주민등록번호 진위 확인 메서드 추가
-    public boolean verifyResidentRegistration(String phoneNo, String userName, String identity, String issueDate) {
-        String url = apiUrl;
-
-        // 요청 객체 생성
-        Map<String, Object> request = new HashMap<>();
-        request.put("organization", "0002");
-        request.put("loginType", "6");
-        request.put("loginTypeLevel", "1");
-        request.put("telecom", "");
-        request.put("phoneNo", phoneNo);
-        request.put("loginUserName", userName);
-        request.put("loginIdentity", identity);
-        request.put("loginBirthDate", "");
-        request.put("birthDate", "");
-        request.put("identity", identity);
-        request.put("userName", userName);
-        request.put("issueDate", issueDate);
-        request.put("identityEncYn", "");
-
-        // POST 요청 전송 및 응답 받기
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
-
-        if (response.getStatusCode() == HttpStatus.OK) {
-            Map<String, Object> responseBody = response.getBody();
-            // 진위 여부 확인
-            if (responseBody != null && responseBody.containsKey("result")) {
-                Map<String, Object> result = (Map<String, Object>) responseBody.get("result");
-                return (Boolean) result.get("isValid"); // 유효성 여부 반환
-            }
-        }
-        return false; // 기본적으로 false 반환
-    }
+//    public boolean verifyResidentRegistration(String phoneNo, String userName, String identity, String issueDate) {
+//        String url = apiUrl;
+//
+//        // 요청 객체 생성
+//        Map<String, Object> request = new HashMap<>();
+//        request.put("organization", "0002");
+//        request.put("loginType", "6");
+//        request.put("loginTypeLevel", "1");
+//        request.put("telecom", "");
+//        request.put("phoneNo", phoneNo);
+//        request.put("loginUserName", userName);
+//        request.put("loginIdentity", identity);
+//        request.put("loginBirthDate", "");
+//        request.put("birthDate", "");
+//        request.put("identity", identity);
+//        request.put("userName", userName);
+//        request.put("issueDate", issueDate);
+//        request.put("identityEncYn", "");
+//
+//        // POST 요청 전송 및 응답 받기
+//        ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+//
+//        if (response.getStatusCode() == HttpStatus.OK) {
+//            Map<String, Object> responseBody = response.getBody();
+//            // 진위 여부 확인
+//            if (responseBody != null && responseBody.containsKey("result")) {
+//                Map<String, Object> result = (Map<String, Object>) responseBody.get("result");
+//                return (Boolean) result.get("isValid"); // 유효성 여부 반환
+//            }
+//        }
+//        return false; // 기본적으로 false 반환
+//    }
 
     public void verifyPassword(String id, String password, String newPassword){
         Member member = findVerifiedMember(id);

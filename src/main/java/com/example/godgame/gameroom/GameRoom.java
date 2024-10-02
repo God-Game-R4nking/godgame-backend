@@ -22,6 +22,7 @@ public class GameRoom {
     private List<Long> memberIds;
     private long gameId; // 게임 ID 추가
 
+
     public GameRoom(String gameRoomName, String gameRoomPassword, String publicStatus, long memberId, long gameId) {
         this.gameRoomName = gameRoomName;
         this.gameRoomPassword = gameRoomPassword;
@@ -30,6 +31,18 @@ public class GameRoom {
         this.memberIds.add(memberId); // 생성자 ID 추가
         this.gameId = gameId; // 게임 ID 설정
     }
+
+    public GameRoom(Long gameRoomId, String gameRoomName, String gameRoomPassword, String publicStatus, long memberId, long gameId) {
+        this.gameRoomId = gameRoomId;
+        this.gameRoomName = gameRoomName;
+        this.gameRoomPassword = gameRoomPassword;
+        this.publicStatus = publicStatus;
+        this.memberIds = new ArrayList<>();
+        this.memberIds.add(memberId);
+        this.gameId = gameId;
+    }
+
+
 
     // 생성자 (비밀번호가 필요 없는 경우)
     public GameRoom(String gameRoomName, String publicStatus, long memberId, long gameId) {

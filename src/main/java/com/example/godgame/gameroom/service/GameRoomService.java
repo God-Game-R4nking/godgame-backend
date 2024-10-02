@@ -15,28 +15,45 @@ import java.util.Map;
 
 @Service
 public class GameRoomService {
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+        @Autowired
+        private RedisTemplate<String, Object> redisTemplate;
 
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
+        @Autowired
+        private ApplicationEventPublisher eventPublisher;
 
-    @Autowired
-    private GameHistoryRepository gameHistoryRepository;
+        @Autowired
+        private GameHistoryRepository gameHistoryRepository;
 
     @Autowired
     private GameRoomHistoryRepository gameRoomHistoryRepository;
 
-    public void createGameRoom(String roomName, String password, boolean isPublic, long creatorId, long gameId) {
-        long gameRoomId = generateGameRoomId();
-        GameRoom gameRoom = new GameRoom(roomName, password, isPublic ? "비공개" : "공개", creatorId, gameId);
-        redisTemplate.opsForValue().set(roomName, gameRoom);
+    public void createGameRoom(String gameRoomName, String password, boolean isPublic, long memberId, long gameId) {
+        // 1. 게임룸 ID 카운터가 존재하지 않으면 초기화
+        if (redisTemplate.opsForValue().get("gameRoomIdCounter") == null) {
+            redisTemplate.opsForValue().set("gameRoomIdCounter", 0);
+        }
 
+        // 2. 게임룸 ID를 자동으로 증가시킴
+        Long gameRoomId = redisTemplate.opsForValue().increment("gameRoomIdCounter");
+
+        if (gameRoomId == null) {
+            throw new RuntimeException("Failed to generate game room ID");
+        }
+
+        // 3. 새로운 게임룸 객체 생성 (ID를 포함)
+        GameRoom gameRoom = new GameRoom(gameRoomId, gameRoomName, password, isPublic ? "비공개" : "공개", memberId, gameId);
+
+        // 4. Redis에 게임룸 저장 (ID를 키로 사용)
+        redisTemplate.opsForValue().set("gameRoom:" + gameRoomId, gameRoom);
+
+        // 5. 게임룸 히스토리 생성 및 DB 저장
         GameRoomHistory gameRoomHistory = new GameRoomHistory();
         gameRoomHistory.setCurrentMember(1); // 초기 인원수
         gameRoomHistory.setCreatedAt(LocalDateTime.now());
         gameRoomHistory.setModifiedAt(LocalDateTime.now());
         gameRoomHistoryRepository.save(gameRoomHistory); // DB에 저장
+
+        System.out.println("Game room created with ID: " + gameRoomId);
     }
 
     public void startGame(long gameRoomId) {
@@ -125,6 +142,11 @@ public class GameRoomService {
             }
         }
     }
+
+    public GameRoom getGameRoom(String gameRoomName) {
+        return (GameRoom) redisTemplate.opsForValue().get(gameRoomName);
+    }
+
 
     public long generateGameRoomId() {
         return redisTemplate.opsForValue().increment("gameRoomIdCounter"); // "gameRoomIdCounter" 키를 사용하여 자동 증가
