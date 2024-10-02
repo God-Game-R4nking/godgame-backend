@@ -19,9 +19,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CharacterEncodingFilter;
+
 import java.util.Arrays;
 
 @Configuration
@@ -58,7 +61,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .antMatchers(HttpMethod.POST, "/members").permitAll()
                         .antMatchers(HttpMethod.PATCH, "/members/**").hasRole("USER")
-                        .antMatchers(HttpMethod.GET, "/members").hasAnyRole("USER","ADMIN")
+                        .antMatchers(HttpMethod.GET, "/members").hasAnyRole("USER", "ADMIN")
                         .antMatchers(HttpMethod.GET, "/members/**").hasAnyRole("USER", "ADMIN")
                         .antMatchers(HttpMethod.DELETE, "/members/**").hasRole("USER")
                         .anyRequest().permitAll()
@@ -88,6 +91,9 @@ public class SecurityConfiguration {
     public class CustomFilterConfigurer  extends AbstractHttpConfigurer<CustomFilterConfigurer, HttpSecurity> {
         @Override
         public void configure(HttpSecurity builder) throws Exception{
+            CharacterEncodingFilter filter = new CharacterEncodingFilter();
+            filter.setEncoding("UTF-8");
+            builder.addFilterBefore(filter, CsrfFilter.class);
             AuthenticationManager authenticationManager =
                     builder.getSharedObject(AuthenticationManager.class);
 

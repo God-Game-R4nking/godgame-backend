@@ -12,6 +12,8 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.nio.charset.StandardCharsets;
+
 @Configuration
 @EnableRedisRepositories // Redis 리포지토리를 활성화하여 Redis 데이터를 JPA처럼 다룰 수 있게 해주는 애너테이션
 public class RedisRepositoryConfig {
@@ -77,22 +79,19 @@ public class RedisRepositoryConfig {
         // 이 설정은 Redis에 데이터를 저장할 때 직렬화 방식을 지정하는 것으로, 데이터 저장 형식을 정의합니다.
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new StringRedisSerializer());
-
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
 
         return redisTemplate; // RedisTemplate 빈 반환
     }
 
     @Bean
-    public RedisTemplate<String, Object> redisGameRoomTemplate() {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+    public RedisTemplate<String, String> redisGameRoomTemplate() {
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory());
 
-        // 키는 문자열로 직렬화
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-
-        // 값은 JSON 형식으로 직렬화
-        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        // 키와 값을 문자열로 설정
+        redisTemplate.setKeySerializer(new StringRedisSerializer(StandardCharsets.UTF_8));
+        redisTemplate.setValueSerializer(new StringRedisSerializer(StandardCharsets.UTF_8));
 
         return redisTemplate;
     }

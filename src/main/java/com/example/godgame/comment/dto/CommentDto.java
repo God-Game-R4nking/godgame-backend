@@ -1,5 +1,6 @@
 package com.example.godgame.comment.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -42,7 +43,9 @@ public class CommentDto {
         private long commentId;
         private long boardId;
         private String commentContent;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime createdAt;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime modifiedAt;
     }
 }
