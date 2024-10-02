@@ -13,6 +13,8 @@ public enum ExceptionCode {
     COMMENT_EXISTS(409, "Comment exists"),
     COMMENT_ALREADY_DELETED(404, "Comment already deleted"),
     LIKE_NOT_FOUND(404, "Like not found"),
+    BAN_EXISTS(409,"Ban exists"),
+    BAN_NOT_FOUND(404, "Ban not found"),
     PASSWORD_WRONG(400, "PASSWORD WRONG");
 
     @Getter
