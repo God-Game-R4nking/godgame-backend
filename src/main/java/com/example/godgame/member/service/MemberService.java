@@ -46,6 +46,7 @@ public class MemberService {
 
     public Member createMember(Member member) {
         verifyExistsId(member.getId());
+
         String encryptedPassword = passwordEncoder.encode(member.getPassword());
         member.setPassword(encryptedPassword);
 
@@ -112,6 +113,11 @@ public class MemberService {
 
     public void verifyExistsId(String id) {
         Optional<Member> member = memberRepository.findById(id);
+        if (member.isPresent()) throw new BusinessLogicException(ExceptionCode.MEMBER_EXISTS);
+    }
+
+    public void verifyExistsPhone(String phone) {
+        Optional<Member> member = memberRepository.findByPhone(phone);
         if (member.isPresent()) throw new BusinessLogicException(ExceptionCode.MEMBER_EXISTS);
     }
 
