@@ -1,6 +1,9 @@
 package com.example.godgame.redis;
 
 import com.example.godgame.gameroom.GameRoom;
+import com.example.godgame.websocket.webchat.ChattingMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +13,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.nio.charset.StandardCharsets;
@@ -95,4 +99,32 @@ public class RedisRepositoryConfig {
 
         return redisTemplate;
     }
+
+//    private final Logger log = LoggerFactory.getLogger(getClass());
+//
+//    @Bean
+//    public RedisTemplate<String, ChattingMessage> redisTemplate(RedisConnectionFactory redisConnectionFactory){
+//        // RedisTemplate 빈을 생성하는 메서드
+//        RedisTemplate<String, ChattingMessage> template = new RedisTemplate<>();
+//        template.setConnectionFactory(redisConnectionFactory);
+//
+//        // Key Serializer를 StringRedisSerializer로 설정
+//        template.setKeySerializer(new StringRedisSerializer());
+//
+//        // Value Serializer를 Jackson2JsonRedisSerializer로 설정
+//        Jackson2JsonRedisSerializer<ChattingMessage> jsonSerializer = new Jackson2JsonRedisSerializer<>(ChattingMessage.class);
+//        template.setValueSerializer(jsonSerializer);
+//
+//        // Hash Key Serializer를 StringRedisSerializer로 설정
+//        template.setHashKeySerializer(new StringRedisSerializer());
+//
+//        // Hash Value Serializer를 Jackson2JsonRedisSerializer로 설정
+//        template.setHashValueSerializer(jsonSerializer);
+//
+//        // 로깅: RedisTemplate이 성공적으로 구성되었음을 로그로 출력
+//        log.info("RedisTemplate configured successfully");
+//
+//        return template;
+//    }
+
 }
