@@ -25,7 +25,7 @@ public class GameRoom {
     private long gameId; // 게임 ID 추가
 
     // 멤버 추가 메서드
-    public boolean addMember(long memberId) {
+    public boolean addMember(Long memberId) {
         if (currentPopulation < maxPopulation) {
             memberIds.add(memberId);
             currentPopulation++;
@@ -35,12 +35,8 @@ public class GameRoom {
     }
 
     // 멤버 제거 메서드
-    public boolean removeMember(long memberId) {
-        if (memberIds.remove(memberId)) {
-            currentPopulation--;
-            return true; // 제거 성공
-        }
-        return false; // 해당 멤버가 존재하지 않음
+    public boolean removeMember(Long memberId) {
+        return memberIds.remove(memberId);
     }
 }
 

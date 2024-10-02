@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -42,10 +43,21 @@ public class GameRoomService {
             throw new RuntimeException("Failed to generate game room ID");
         }
 
-        // Redis에 해당 멤버의 기존 게임룸 확인
+        // Redis에서 해당 멤버의 게임룸 확인
         String existingGameRoomKey = "member:" + gameRoom.getMemberIds().get(0) + ":gameRoom";
-        if (redisGameRoomTemplate.opsForValue().get(existingGameRoomKey) != null) {
-            throw new RuntimeException("사용자는 이미 게임룸을 생성했습니다. 하나의 게임룸만 생성할 수 있습니다.");
+        String existingRoomId = redisGameRoomTemplate.opsForValue().get(existingGameRoomKey);
+
+        if (existingRoomId != null) {
+            // 기존 게임룸이 존재하면 그 게임룸이 비어있는지 확인
+            String existingGameRoomJson = redisGameRoomTemplate.opsForValue().get("gameRoom:" + existingRoomId);
+            GameRoom existingGameRoom = convertFromJson(existingGameRoomJson);
+
+            if (existingGameRoom != null && existingGameRoom.getCurrentPopulation() > 0) {
+                throw new RuntimeException("사용자는 이미 게임룸을 생성했습니다. 하나의 게임룸만 생성할 수 있습니다.");
+            } else {
+                // 비어있는 경우 기존 게임룸 삭제
+                removeGameRoomIfEmpty("gameRoom:" + existingRoomId);
+            }
         }
 
         // 게임룸 객체에 ID 설정
@@ -59,12 +71,11 @@ public class GameRoomService {
         redisGameRoomTemplate.opsForValue().set(existingGameRoomKey, String.valueOf(gameRoomId));
 
         // Redis에 게임룸 저장 (JSON 문자열)
-        redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoom.getGameRoomId(), jsonGameRoom);
-
+        redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoomId, jsonGameRoom);
 
         // 게임룸 히스토리 생성 및 DB 저장
         GameRoomHistory gameRoomHistory = new GameRoomHistory();
-        gameRoomHistory.setCurrentMember(1);
+        gameRoomHistory.setCurrentMember(gameRoom.getCurrentPopulation());
         gameRoomHistory.setCreatedAt(LocalDateTime.now());
         gameRoomHistory.setModifiedAt(LocalDateTime.now());
         gameRoomHistoryRepository.save(gameRoomHistory);
@@ -93,26 +104,29 @@ public class GameRoomService {
         }
     }
 
+
     public boolean joinGame(long gameRoomId, Long memberId) {
         String gameRoomJson = redisGameRoomTemplate.opsForValue().get("gameRoom:" + gameRoomId);
         GameRoom gameRoom = convertFromJson(gameRoomJson); // JSON에서 역직렬화
 
+        // 게임 방이 존재하지 않거나 게임이 시작된 경우
         if (gameRoom == null || "게임중".equals(gameRoom.getGameRoomStatus())) {
             return false; // 게임이 시작된 경우 신청 불가
         }
 
+        // 최대 인원수 초과시 입장 실패
         if (gameRoom.getCurrentPopulation() >= gameRoom.getMaxPopulation()) {
             return false; // 최대 인원수 초과시에 입장 실패
         }
 
-        // 현재 방에 들어온 memberId의 리스트에 같은 멤버 아이디가 있는지 확인
+        // 이미 존재하는 멤버 아이디일 경우 입장 실패
         if (gameRoom.getMemberIds().contains(memberId)) {
             return false; // 이미 존재하는 멤버 아이디일 경우 입장 실패
         }
 
         // 멤버를 추가하고 현재 인원 수를 증가시킴
         gameRoom.getMemberIds().add(memberId);
-        gameRoom.setCurrentPopulation(gameRoom.getCurrentPopulation() + 1);
+        gameRoom.setCurrentPopulation(gameRoom.getCurrentPopulation() + 1); // 인원수 증가
 
         // 게임룸을 다시 Redis에 저장
         String updatedJsonGameRoom = convertToFormattedJson(gameRoom);
@@ -121,28 +135,60 @@ public class GameRoomService {
         return true; // 성공적으로 입장함
     }
 
-    public void leaveGame(String roomName, Long memberId) {
-        String gameRoomJson = redisGameRoomTemplate.opsForValue().get(roomName);
-        GameRoom gameRoom = convertFromJson(gameRoomJson);
-        if (gameRoom != null) {
-            boolean removed = gameRoom.removeMember(memberId); // 멤버 제거
-            if (removed) {
-                // 인원수 업데이트
-                gameRoom.setCurrentPopulation(gameRoom.getCurrentPopulation() - 1);
-                // memberIds 리스트에서 멤버 ID 제거
-                gameRoom.getMemberIds().remove(memberId);
 
-                redisGameRoomTemplate.opsForValue().set(roomName, convertToFormattedJson(gameRoom)); // JSON으로 업데이트
-                removeGameRoomIfEmpty(roomName); // 방이 비었으면 삭제
-            }
+    public boolean leaveGame(long gameRoomId, Long memberId) {
+        String gameRoomJson = redisGameRoomTemplate.opsForValue().get("gameRoom:" + gameRoomId);
+        GameRoom gameRoom = convertFromJson(gameRoomJson);
+
+        // 게임 방이 존재하지 않거나 멤버가 존재하지 않는 경우
+        if (gameRoom == null || !gameRoom.getMemberIds().contains(memberId)) {
+            return false; // 게임 방이 없거나 해당 멤버가 없음
         }
+
+        // 멤버 제거
+        boolean removed = gameRoom.removeMember(memberId);
+        if (removed) {
+            // 인원수 업데이트
+            int newPopulation = gameRoom.getCurrentPopulation() - 1;
+            gameRoom.setCurrentPopulation(newPopulation);
+            System.out.println("Updated population: " + newPopulation); // 로그 추가
+
+            // 게임룸을 다시 Redis에 저장
+            redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoomId, convertToFormattedJson(gameRoom));
+
+            // 방이 비었으면 삭제
+            String strGameRoomId = "gameRoom:" + gameRoomId;
+            removeGameRoomIfEmpty(strGameRoomId); // gameRoomId로 직접 삭제
+
+            // 멤버의 게임룸 정보를 삭제
+            String existingGameRoomKey = "member:" + memberId + ":gameRoom";
+            redisGameRoomTemplate.delete(existingGameRoomKey); // 기존 게임룸 ID 삭제
+
+            return true; // 성공적으로 나감
+        }
+
+        return false; // 멤버 제거 실패
     }
 
-    public void removeGameRoomIfEmpty(String roomName) {
-        String gameRoomJson = redisGameRoomTemplate.opsForValue().get(roomName);
-        GameRoom gameRoom = convertFromJson(gameRoomJson);
-        if (gameRoom != null && gameRoom.getCurrentPopulation() == 0) {
-            redisGameRoomTemplate.delete(roomName); // 방 삭제
+    public void removeGameRoomIfEmpty(String gameRoomId) {
+        String gameRoomJson = redisGameRoomTemplate.opsForValue().get(gameRoomId);
+        GameRoom gameRoom = convertFromJson(gameRoomJson); // JSON 문자열을 GameRoom 객체로 변환
+        System.out.println("Game room JSON retrieved from Redis: " + gameRoomJson); // 로그 추가
+
+        if (gameRoomJson == null) {
+            System.out.println("Game room JSON is null for ID: " + gameRoomId);
+            return;
+        }
+
+        if (gameRoom != null) {
+            if (gameRoom.getCurrentPopulation() == 0) {
+                redisGameRoomTemplate.delete(gameRoomId); // 방 삭제
+                System.out.println("Game room deleted: " + gameRoomId);
+            } else {
+                System.out.println("Game room not empty: " + gameRoomId + ", current population: " + gameRoom.getCurrentPopulation());
+            }
+        } else {
+            System.out.println("Game room not found: " + gameRoomId);
         }
     }
 
@@ -190,13 +236,13 @@ public class GameRoomService {
     }
 
     private GameRoom convertFromJson(String json) {
+        if (json == null) {
+            throw new IllegalArgumentException("Input JSON string cannot be null");
+        }
+
         try {
-            // JSON 문자열이 UTF-8로 인코딩되어 있는지 확인
-            String decodedJson = URLDecoder.decode(json, StandardCharsets.UTF_8.name());
             ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(decodedJson, GameRoom.class);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Error while decoding JSON", e);
+            return objectMapper.readValue(json, GameRoom.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error while converting JSON to GameRoom", e);
         }
