@@ -28,25 +28,32 @@ public class GameRoomService {
     private GameRoomHistoryRepository gameRoomHistoryRepository;
 
     public void createGameRoom(String gameRoomName, String password, boolean isPublic, long memberId, long gameId) {
-        // 1. 게임룸 ID 카운터가 존재하지 않으면 초기화
+        // 게임룸 ID 카운터가 존재하지 않으면 초기화
         if (redisTemplate.opsForValue().get("gameRoomIdCounter") == null) {
             redisTemplate.opsForValue().set("gameRoomIdCounter", 0);
         }
+        // 해당 사용자가 게임룸을 만들었는지 검증하는 메서드
+        String existingGameRoomKey = "gameRoom:" + gameId;
+        if (redisTemplate.opsForValue().get(existingGameRoomKey) != null) {
+            throw new RuntimeException("사용자는 이미 게임룸을 생성했습니다. 하나의 게임룸만 생성할 수 있습니다.");
+        }
 
-        // 2. 게임룸 ID를 자동으로 증가시킴
+        //  게임룸 ID를 자동으로 증가시킴
         Long gameRoomId = redisTemplate.opsForValue().increment("gameRoomIdCounter");
 
+        // 실패시 예외 처리
         if (gameRoomId == null) {
             throw new RuntimeException("Failed to generate game room ID");
         }
 
-        // 3. 새로운 게임룸 객체 생성 (ID를 포함)
+        // 새로운 게임룸 객체 생성 (ID를 포함)
         GameRoom gameRoom = new GameRoom(gameRoomId, gameRoomName, password, isPublic ? "비공개" : "공개", memberId, gameId);
 
-        // 4. Redis에 게임룸 저장 (ID를 키로 사용)
+        // Redis에 게임룸 저장 (ID를 키로 사용)
+        // 나중에 ID로 사용할땐 섭스트링으로 gameRoom: 이걸빼고 long 타입으로 바꿔야해서 파싱을 2번해서 써야함
         redisTemplate.opsForValue().set("gameRoom:" + gameRoomId, gameRoom);
 
-        // 5. 게임룸 히스토리 생성 및 DB 저장
+        // 게임룸 히스토리 생성 및 DB 저장
         GameRoomHistory gameRoomHistory = new GameRoomHistory();
         gameRoomHistory.setCurrentMember(1); // 초기 인원수
         gameRoomHistory.setCreatedAt(LocalDateTime.now());
@@ -79,23 +86,21 @@ public class GameRoomService {
 
 
     public boolean joinGame(long gameRoomId, Long memberId) {
-        GameRoom gameRoom = (GameRoom) redisTemplate.opsForValue().get(String.valueOf(gameRoomId)); // ID를 문자열로 변환
+        GameRoom gameRoom = (GameRoom) redisTemplate.opsForValue().get("gameRoom:" + gameRoomId); // 키 수정
         if (gameRoom == null || "게임중".equals(gameRoom.getGameRoomStatus())) {
             return false; // 게임이 시작된 경우 신청 불가
         }
 
         if (gameRoom.getCurrentPopulation() >= gameRoom.getMaxPopulation()) {
-            return false; // 최대 인원수 초과
+            return false; // 최대 인원수 초과시에 입장 실패
         }
 
-        boolean added = gameRoom.addMember(memberId); // 멤버 추가
+        // 멤버 추가 및 인원 수 업데이트
+        boolean added = gameRoom.getMemberIds().add(memberId); // 해당 멤버를 레디스 게임룰 객체 리스트에 추가
         if (added) {
-            // 인원수 업데이트
-            gameRoom.setCurrentPopulation(gameRoom.getCurrentPopulation() + 1);
-            // memberIds 리스트에 멤버 ID 추가
-            gameRoom.getMemberIds().add(memberId);
+            gameRoom.setCurrentPopulation(gameRoom.getCurrentPopulation() + 1); // 인원수 업데이트
             // Redis에 업데이트
-            redisTemplate.opsForValue().set(String.valueOf(gameRoomId), gameRoom); // ID를 문자열로 변환하여 업데이트
+            redisTemplate.opsForValue().set("gameRoom:" + gameRoomId, gameRoom);
         }
 
         return added; // 신청 성공 여부 반환
