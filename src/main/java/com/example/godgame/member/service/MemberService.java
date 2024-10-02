@@ -7,6 +7,7 @@ import com.example.godgame.helper.event.MemberRegistrationApplicationEvent;
 import com.example.godgame.member.dto.MemberDto;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.repository.MemberRepository;
+import com.example.godgame.ranking.entity.Ranking;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -36,15 +37,6 @@ public class MemberService {
     private final RestTemplate restTemplate;
 
 
-   @Getter
-   @Value("${codef.api.key}")
-   private String apiKey;
-
-   @Getter
-   @Value("${codef.api.url}")
-   private String apiUrl;
-
-
     public MemberService(MemberRepository memberRepository, ApplicationEventPublisher publisher, PasswordEncoder passwordEncoder, JwtAuthorityUtils authorityUtils, RestTemplate restTemplate) {
         this.memberRepository = memberRepository;
         this.publisher = publisher;
@@ -61,6 +53,8 @@ public class MemberService {
 
         List<String> roles = authorityUtils.createRoles(member.getId());
         member.setRoles(roles);
+
+        member.setRanking(new Ranking());
 
         Member savedMember = memberRepository.save(member);
 
