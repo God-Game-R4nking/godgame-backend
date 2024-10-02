@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.validator.internal.util.stereotypes.Lazy;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -38,7 +39,7 @@ public class Board {
     @Column(nullable = false)
     private BoardStatus boardStatus = BoardStatus.BOARD_REGISTERED;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinColumn(name = "MEMBER_ID", nullable = false)
     @JsonBackReference
     private Member member;

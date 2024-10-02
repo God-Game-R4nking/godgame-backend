@@ -2,6 +2,7 @@ package com.example.godgame.board.dto;
 
 import com.example.godgame.board.entity.Board;
 import com.example.godgame.comment.entity.Comment;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sun.istack.NotNull;
 import lombok.*;
 import org.springframework.data.domain.Page;
@@ -13,6 +14,7 @@ import java.util.List;
 public class BoardDto {
 
     @Getter
+    @Setter
     @AllArgsConstructor
     public static class Post {
 
@@ -21,8 +23,6 @@ public class BoardDto {
 
         @NotBlank
         private String content;
-
-        private Long memberId;
     }
 
     @Getter
@@ -56,7 +56,9 @@ public class BoardDto {
         private List<CommentResponseDto> comments;
         private int currentPage;
         private int totalPages;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime createdAt;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime modifiedAt;
 
         public String setBoardStatus() {return boardStatus.getStatus();}

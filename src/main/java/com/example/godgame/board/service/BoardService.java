@@ -9,6 +9,8 @@ import com.example.godgame.comment.mapper.CommentMapper;
 import com.example.godgame.comment.repository.CommentRepository;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.exception.ExceptionCode;
+import com.example.godgame.member.entity.Member;
+import com.example.godgame.member.service.MemberService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,17 +31,31 @@ public class BoardService {
     private final BoardMapper boardMapper;
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
+    private final MemberService memberService;
 
-    public BoardService(BoardRepository boardRepository, BoardMapper boardMapper, CommentRepository commentRepository, CommentMapper commentMapper) {
+    public BoardService(BoardRepository boardRepository, BoardMapper boardMapper, CommentRepository commentRepository, CommentMapper commentMapper, MemberService memberService) {
         this.boardRepository = boardRepository;
         this.boardMapper = boardMapper;
         this.commentRepository = commentRepository;
         this.commentMapper = commentMapper;
+        this.memberService = memberService;
     }
 
     public Board createBoard(Board board, Authentication authentication) {
 
-        verifiedMemberByBoard(board, authentication);
+        // 유효성 검증
+        String id = authentication.getName();
+        Member member = memberService.findVerifiedMember(id);
+        board.setMember(member);
+        String memberId = board.getMember().getId();
+
+        if(memberId == null || memberId.isEmpty()) {
+            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND);
+        }
+
+        if(!memberId.equals((String) authentication.getPrincipal())) {
+            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_ALLOWED);
+        }
         return boardRepository.save(board);
     }
 
@@ -85,7 +101,9 @@ public class BoardService {
 
     public boolean verifiedMemberByBoard(Board board, Authentication authentication) {
         Board findBoard = findBoard(board.getBoardId());
-        if(findBoard.getMember().getMemberId() == (long) authentication.getPrincipal()) {
+        String findBoardMemberId = String.valueOf(findBoard.getMember().getMemberId());
+        String memberId = (String) authentication.getPrincipal();
+        if(findBoardMemberId.equals(memberId)) {
             return true;
         } else {
             throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_ALLOWED);
@@ -94,7 +112,9 @@ public class BoardService {
 
     public boolean verifiedMemberByBoardId(long boardId, Authentication authentication) {
         Board findBoard = findBoard(boardId);
-        if(findBoard.getMember().getMemberId() == (long) authentication.getPrincipal()) {
+        String findBoardMemberId = String.valueOf(findBoard.getMember().getMemberId());
+        String memberId = (String) authentication.getPrincipal();
+        if(findBoardMemberId.equals(memberId)) {
             return true;
         } else {
             throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_ALLOWED);
