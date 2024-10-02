@@ -22,7 +22,7 @@ public class BanService {
     }
 
     public Ban createBan(Ban ban){
-        
+
         return banRepository.save(ban);
     }
 
