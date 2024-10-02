@@ -36,6 +36,15 @@ public class MemberService {
     private final RestTemplate restTemplate;
 
 
+   @Getter
+   @Value("${codef.api.key}")
+   private String apiKey;
+
+   @Getter
+   @Value("${codef.api.url}")
+   private String apiUrl;
+
+
     public MemberService(MemberRepository memberRepository, ApplicationEventPublisher publisher, PasswordEncoder passwordEncoder, JwtAuthorityUtils authorityUtils, RestTemplate restTemplate) {
         this.memberRepository = memberRepository;
         this.publisher = publisher;

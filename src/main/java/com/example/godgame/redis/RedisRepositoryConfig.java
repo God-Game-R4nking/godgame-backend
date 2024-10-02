@@ -1,5 +1,6 @@
 package com.example.godgame.redis;
 
+import com.example.godgame.gameroom.GameRoom;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +9,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -75,6 +77,25 @@ public class RedisRepositoryConfig {
         // 이 설정은 Redis에 데이터를 저장할 때 직렬화 방식을 지정하는 것으로, 데이터 저장 형식을 정의합니다.
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+
+        return redisTemplate; // RedisTemplate 빈 반환
+    }
+    @Bean
+    public RedisTemplate<Long, GameRoom> redisGameRoomTemplate() {
+        // RedisTemplate 객체를 생성합니다.
+        RedisTemplate<Long, GameRoom> redisTemplate = new RedisTemplate<>();
+
+        // RedisConnectionFactory를 RedisTemplate에 설정합니다.
+        // RedisTemplate이 Redis 서버와의 연결을 사용할 수 있도록 해줍니다.
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+
+        // Redis의 키와 값을 직렬화하는 방식을 설정합니다.
+        // 여기서는 StringRedisSerializer를 사용하여 키와 값을 문자열로 직렬화합니다.
+        // 이 설정은 Redis에 데이터를 저장할 때 직렬화 방식을 지정하는 것으로, 데이터 저장 형식을 정의합니다.
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
 
         return redisTemplate; // RedisTemplate 빈 반환
     }

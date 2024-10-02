@@ -1,55 +1,44 @@
 package com.example.godgame.gameroom.controller;
 
-import com.example.godgame.gameroom.dto.GameRoomRequest;
-import com.example.godgame.gameroom.entity.GameRoom;
 import com.example.godgame.gameroom.service.GameRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/gamerooms")
+@RequestMapping("/game-rooms")
 public class GameRoomController {
     @Autowired
     private GameRoomService gameRoomService;
 
     @PostMapping
-    public ResponseEntity<GameRoom> createGameRoom(@RequestBody GameRoomRequest request) {
-        long newId = gameRoomService.generateNewId(); // long 타입 ID 자동 생성
-        GameRoom gameRoom = new GameRoom();
-        gameRoom.setGameRoomId(newId);
-        gameRoom.setGameId(request.getGameId());
-        gameRoom.setGameRoomName(request.getGameRoomName());
-
-        // 게임 방 생성 시 멤버 추가 (예: 첫 번째 멤버)
-        if (request.getMemberId() != null) {
-            gameRoom.addMember(request.getMemberId());
-            gameRoom.setCurrentMembers(1); // 현재 인원 수를 1로 설정
-        }
-
-        GameRoom savedGameRoom = gameRoomService.saveGameRoom(gameRoom);
-        return ResponseEntity.status(201).body(savedGameRoom);
+    public ResponseEntity<Void> createGameRoom(@RequestParam String gameRoomName,
+                                               @RequestParam(required = false) String gameRoomPassword,
+                                               @RequestParam long memberId,
+                                               @RequestParam boolean isPublic, // isPublic 매개변수 추가
+                                               @RequestParam long gameId) { // gameId 매개변수 추가
+        gameRoomService.createGameRoom(gameRoomName, gameRoomPassword, isPublic, memberId, gameId); // gameId도 넘겨줌
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PostMapping("/{gameRoomId}/join/{memberId}")
-    public ResponseEntity<String> joinGameRoom(@PathVariable long gameRoomId, @PathVariable long memberId) {
-        boolean success = gameRoomService.joinGameRoom(gameRoomId, memberId);
-        if (success) {
-            return ResponseEntity.ok("Successfully joined the game room.");
-        } else {
-            return ResponseEntity.status(400).body("Failed to join the game room. Maximum capacity reached.");
+    @PostMapping("/{roomName}/join")
+    public ResponseEntity<Void> joinGame(@PathVariable long gameRoomId, @RequestParam Long memberId) {
+        if (gameRoomService.joinGame(gameRoomId, memberId)) {
+            return ResponseEntity.ok().build();
         }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-    @PostMapping("/{gameRoomId}/leave/{memberId}")
-    public ResponseEntity<String> leaveGameRoom(@PathVariable long gameRoomId, @PathVariable long memberId) {
-        boolean success = gameRoomService.leaveGameRoom(gameRoomId, memberId);
-        if (success) {
-            return ResponseEntity.ok("Successfully left the game room.");
-        } else {
-            return ResponseEntity.status(404).body("Game room not found.");
-        }
-    }
+//    @PostMapping("/{roomName}/start")
+//    public ResponseEntity<Void> startGame(@PathVariable String roomName) {
+//        gameRoomService.startGame(roomName);
+//        return ResponseEntity.ok().build();
+//    }
+//
+//    @PostMapping("/{roomName}/end")
+//    public ResponseEntity<Void> endGame(@PathVariable String roomName) {
+//        gameRoomService.endGame(roomName);
+//        return ResponseEntity.ok().build();
+//    }
 }
