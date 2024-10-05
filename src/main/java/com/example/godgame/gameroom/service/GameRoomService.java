@@ -1,5 +1,6 @@
 package com.example.godgame.gameroom.service;
 
+import com.example.godgame.chat.service.ChatService;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.history.entity.GameHistory;
 import com.example.godgame.history.entity.GameRoomHistory;
@@ -33,6 +34,9 @@ public class GameRoomService {
 
     @Autowired
     private GameRoomHistoryRepository gameRoomHistoryRepository;
+
+    @Autowired
+    private ChatService chatService; // ChatService 추가
 
 
 
@@ -210,6 +214,8 @@ public class GameRoomService {
                 gameHistoryRepository.save(gameHistory);
             }
         }
+        // 게임 종료 시 Redis에 저장된 모든 채팅 메시지를 MongoDB에 저장
+        chatService.saveAllChatsFromRedis();
     }
 
     public GameRoom getGameRoom(String gameRoomName) {

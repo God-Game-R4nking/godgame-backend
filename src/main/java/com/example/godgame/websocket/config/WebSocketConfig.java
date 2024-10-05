@@ -1,27 +1,23 @@
 package com.example.godgame.websocket.config;
 
+import com.example.godgame.websocket.webchat.ChattingMessage;
 import com.example.godgame.websocket.webchat.MyHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.WebSocketHandler;
-import org.springframework.web.socket.config.annotation.*;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 @Configuration
-//@EnableWebSocketMessageBroker
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
 
-//    @Override
-//    public void registerStompEndpoints(StompEndpointRegistry registry) {
-//        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
-//    }
-//
-//    @Override
-//    public void configureMessageBroker(MessageBrokerRegistry registry) {
-//       registry.enableSimpleBroker("/sub");
-//       registry.setApplicationDestinationPrefixes("/pub");
-//    }
+    private final RedisTemplate<String, ChattingMessage> redisTemplate;
+
+    public WebSocketConfig(RedisTemplate<String, ChattingMessage> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
@@ -29,7 +25,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     }
 
     @Bean
-    public WebSocketHandler myHandler(){
-        return new MyHandler();
+    public MyHandler myHandler() {
+        return new MyHandler(redisTemplate);
     }
 }
