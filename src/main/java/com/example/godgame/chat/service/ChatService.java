@@ -6,6 +6,8 @@ import com.example.godgame.chat.entity.Chat;
 import com.example.godgame.chat.repository.ChatRepository;
 import com.example.godgame.counter.service.CounterService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,11 +16,18 @@ import java.util.stream.Collectors;
 
 @Service
 public class ChatService {
+
     @Autowired
     private ChatRepository chatRepository;
 
     @Autowired
     private CounterService counterService;
+
+    @Autowired
+    private RedisTemplate<String, Chat> chattingMessageRedisTemplate;
+
+    @Value("${chatting.messages.redis.key}")
+    private String redisKey;
 
     public Chat saveChat(Chat chat) {
         long newChatId = counterService.getNextSequence("chatId"); // 자동 생성된 ID 가져오기
@@ -28,7 +37,20 @@ public class ChatService {
     }
 
 
+
     public List<Chat> getChatsByGameRoomId(String gameRoomId) {
         return chatRepository.findByGameRoomId(gameRoomId);
     }
+
+    public void saveAllChatsFromRedis() {
+        while (true) {
+            Chat chattingMessage = chattingMessageRedisTemplate.opsForList().leftPop(redisKey);
+            if (chattingMessage == null) {
+                break; // 더 이상 꺼낼 메시지가 없으면 종료
+            }
+            saveChat(chattingMessage); // MongoDB에 저장
+        }
+    }
+
+
 }
