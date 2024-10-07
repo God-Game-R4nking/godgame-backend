@@ -12,5 +12,5 @@ import java.util.List;
 public interface MusicRepository extends JpaRepository<Music, Long> {
 
     @Query(value = "SELECT * FROM music m WHERE m.music.era = :era ORDER BY RAND() LIMIT :count", nativeQuery = true)
-    List<Music> findRandomMusics(@Param("count") int count, @Param("era") int era);
+    List<Music> findRandomMusics(@Param("count") int count, @Param("era") String era);
 }
