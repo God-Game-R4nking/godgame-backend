@@ -14,7 +14,6 @@ import javax.persistence.*;
 public class CountryImage {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long countryImageId;
 
     @Column
