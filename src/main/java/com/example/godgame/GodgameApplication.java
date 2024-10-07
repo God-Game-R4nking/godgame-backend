@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = {"com.example.godgame.music", "com.example.godgame.ban","com.example.godgame.ranking","com.example.godgame.image","com.example.godgame.member", "com.example.godgame.board", "com.example.godgame.comment","com.example.godgame.history"})
+@EnableJpaRepositories(basePackages = {"com.example.godgame.catchmind", "com.example.godgame.music", "com.example.godgame.ban","com.example.godgame.ranking","com.example.godgame.image","com.example.godgame.member", "com.example.godgame.board", "com.example.godgame.comment","com.example.godgame.history"})
 @EnableMongoRepositories(basePackages = {"com.example.godgame.chat", "com.example.godgame.counter"})
 public class GodgameApplication {
 

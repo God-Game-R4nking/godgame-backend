@@ -22,7 +22,7 @@ public class ChatController {
         return ResponseEntity.status(201).body(savedChat);
     }
 
-    @GetMapping("/gameRoom/{gameRoomId}")
+    @GetMapping("/game-room/{game-room-id}")
     public ResponseEntity<List<Chat>> getChatsByGameRoomId(@PathVariable String gameRoomId) {
         List<Chat> chats = chatService.getChatsByGameRoomId(gameRoomId);
         return ResponseEntity.ok(chats);

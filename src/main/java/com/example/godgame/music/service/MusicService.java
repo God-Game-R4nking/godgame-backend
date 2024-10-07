@@ -18,7 +18,7 @@ public class MusicService {
         this.musicRepository = musicRepository;
     }
 
-    public List<Music> findRandomMusic(int count, int era){
+    public List<Music> findRandomMusic(int count, String era){
         return musicRepository.findRandomMusics(count, era);
     }
 }
