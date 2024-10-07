@@ -38,7 +38,7 @@ public class MemberDto {
         private String phone;
 
         @NotBlank
-        @Pattern(regexp = "^(\\d{6}\\*{5})$", message = "주민등록번호는 총 13자리를 그대로 줍니다")
+        @Pattern(regexp = "^(\\d{6}\\*{7})$", message = "주민등록번호는 총 13자리를 그대로 줍니다")
         private String identificationNumber;
     }
 

@@ -1,5 +1,6 @@
 package com.example.godgame.websocket.webchat;
 
+import com.example.godgame.chat.entity.Chat;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.service.GameRoomService;
 import com.example.godgame.member.entity.Member;
@@ -7,102 +8,114 @@ import com.example.godgame.member.service.MemberService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MyHandler extends TextWebSocketHandler {
 
-    private final Map<String, WebSocketSession> sessions = new HashMap<>();
-    private final RedisTemplate<String, ChattingMessage> chattingMessageRedisTemplate;
+    private final ObjectMapper objectMapper;
+    private final RedisTemplate<String, ChattingMessage> redisTemplate;
+    private final RedisMessageListenerContainer redisMessageListener;
     private final MemberService memberService;
     private final GameRoomService gameRoomService;
+    private final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
-    @Autowired
-    private RedisTemplate<String, String> redisGameRoomTemplate;
-
-    public MyHandler(RedisTemplate<String, ChattingMessage> chattingMessageRedisTemplate, MemberService memberService, GameRoomService gameRoomService) {
-        this.chattingMessageRedisTemplate = chattingMessageRedisTemplate;
+    public MyHandler(ObjectMapper objectMapper, RedisTemplate<String, ChattingMessage> redisTemplate,
+                     RedisMessageListenerContainer redisMessageListener, MemberService memberService,
+                     GameRoomService gameRoomService) {
+        this.objectMapper = objectMapper;
+        this.redisTemplate = redisTemplate;
+        this.redisMessageListener = redisMessageListener;
         this.memberService = memberService;
         this.gameRoomService = gameRoomService;
     }
 
+    @Autowired
+    private RedisTemplate<String,String> redisGameRoomTemplate;
+
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String userId = (String) session.getAttributes().get("userId");
-
         if (userId != null) {
-            Member member = memberService.findVerifiedMember(userId); // ID로 Member 조회
-            session.getAttributes().put("member", member); // 세션에 Member 저장
-            final String sessionId = session.getId();
-            sessions.put(sessionId, session);
-            String enteredMessage = member.getNickName() + "님이 입장하셨습니다.";
-            sendMessage(sessionId, new TextMessage(enteredMessage));
+            Member member = memberService.findVerifiedMember(userId);
+            session.getAttributes().put("member", member);
+            sessions.put(session.getId(), session);
+
+            Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
+            if (gameRoomId != null) {
+                subscribeToGameRoom(session, gameRoomId);
+                String enteredMessage = member.getNickName() + "님이 입장하셨습니다.";
+                publishToGameRoom(gameRoomId, enteredMessage);
+            }
         } else {
-            session.close(CloseStatus.POLICY_VIOLATION); // 유효하지 않은 ID일 경우 연결 종료
+            session.close(CloseStatus.POLICY_VIOLATION);
         }
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        final String sessionId = session.getId();
-
-        // 세션에서 사용자 정보를 가져옵니다.
         Member member = (Member) session.getAttributes().get("member");
-
         if (member != null) {
-            // 메시지를 처리하고 Redis에 저장
-            ChattingMessage chattingMessage = new ChattingMessage();
-            chattingMessage.setChatId(chattingMessageRedisTemplate.opsForValue().increment("chatIdCounter"));
-            chattingMessage.setMemberId(member.getMemberId()); // 실제 사용자 ID로 설정
-            chattingMessage.setNickName(member.getNickName()); // 실제 닉네임으로 설정
-            chattingMessage.setGameRoomId(getGameRoomIdByMemberId(member.getMemberId())); // 실제 게임 룸 ID로 설정
-            chattingMessage.setContent(message.getPayload());
-            chattingMessage.setCreatedAt(LocalDateTime.now());
+            Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
+            if (gameRoomId != null) {
+                ChattingMessage chattingMessage = new ChattingMessage();
+                chattingMessage.setChatId(redisTemplate.opsForValue().increment("chatIdCounter"));
+                chattingMessage.setMemberId(member.getMemberId());
+                chattingMessage.setNickName(member.getNickName());
+                chattingMessage.setGameRoomId(gameRoomId);
+                chattingMessage.setContent(message.getPayload());
+                chattingMessage.setCreatedAt(LocalDateTime.now());
 
-            // Redis에 저장
-            chattingMessageRedisTemplate.opsForList().rightPush("chattingMessages:" + chattingMessage.getGameRoomId(), chattingMessage);
-
-            // 다른 세션으로 메시지 브로드캐스트
-            sendMessage(sessionId, message);
+                publishToGameRoom(gameRoomId, objectMapper.writeValueAsString(chattingMessage));
+            }
         } else {
-            // 사용자 정보가 없는 경우 적절한 에러 처리
             session.sendMessage(new TextMessage("사용자 정보가 없습니다. 다시 로그인하세요."));
         }
     }
 
-
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        final String sessionId = session.getId();
-        sessions.remove(sessionId);
-        Member member = (Member) session.getAttributes().get("member"); // 세션에서 사용자 정보 가져오기
-        String leaveMessage = member != null ? member.getNickName() + "님이 떠났습니다." : sessionId + "님이 떠났습니다.";
-        sendMessage(sessionId, new TextMessage(leaveMessage));
-    }
-
-    @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {}
-
-    private void sendMessage(String sessionId, WebSocketMessage<?> message) {
-        sessions.values().forEach(s -> {
-            if (!s.getId().equals(sessionId) && s.isOpen()) {
-                try {
-                    s.sendMessage(message);
-                } catch (IOException e) {
-                    // 에러 처리
-                }
+        Member member = (Member) session.getAttributes().get("member");
+        sessions.remove(session.getId());
+        if (member != null) {
+            Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
+            if (gameRoomId != null) {
+                unsubscribeFromGameRoom(session, gameRoomId);
+                String leaveMessage = member.getNickName() + "님이 떠났습니다.";
+                publishToGameRoom(gameRoomId, leaveMessage);
             }
-        });
+        }
     }
+
+    private void subscribeToGameRoom(WebSocketSession session, Long gameRoomId) {
+        ChannelTopic topic = new ChannelTopic("gameRoom:" + gameRoomId);
+        redisMessageListener.addMessageListener((message, pattern) -> {
+            try {
+                session.sendMessage(new TextMessage(message.toString()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }, topic);
+    }
+
+    private void unsubscribeFromGameRoom(WebSocketSession session, Long gameRoomId) {
+        ChannelTopic topic = new ChannelTopic("gameRoom:" + gameRoomId);
+        redisMessageListener.removeMessageListener(null, topic);
+    }
+
+    private void publishToGameRoom(Long gameRoomId, String message) {
+        redisTemplate.convertAndSend("gameRoom:" + gameRoomId, message);
+    }
+
 
 
     // memberId로 해당하는 게임룸 ID를 가져오는 메서드

@@ -56,6 +56,10 @@ public class MemberService {
 
         member.setRanking(new Ranking());
 
+        if(!isNickNameAvailable(member.getNickName())){
+            throw new BusinessLogicException(ExceptionCode.NICKNAME_EXISTS);
+        }
+
         Member savedMember = memberRepository.save(member);
 
         publisher.publishEvent(new MemberRegistrationApplicationEvent(this, savedMember));
