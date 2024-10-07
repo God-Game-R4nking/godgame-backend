@@ -14,3 +14,4 @@ public class GameRoomPostDto {
     private long memberId;
     private long gameId;
 }
+

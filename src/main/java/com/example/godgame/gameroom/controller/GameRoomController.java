@@ -3,6 +3,7 @@ package com.example.godgame.gameroom.controller;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.dto.GameRoomPostDto;
+import com.example.godgame.gameroom.dto.GameRoomResponseDto;
 import com.example.godgame.gameroom.mapper.GameRoomMapper;
 import com.example.godgame.gameroom.service.GameRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ public class GameRoomController {
     private GameRoomMapper gameRoomMapper;
 
     @PostMapping
-    public ResponseEntity<Void> createGameRoom(@RequestBody GameRoomPostDto requestBody) {
+    public ResponseEntity<GameRoomResponseDto> createGameRoom(@RequestBody GameRoomPostDto requestBody) {
         if (requestBody == null) {
             throw new RuntimeException("Request body is null");
         }
@@ -31,29 +32,29 @@ public class GameRoomController {
             throw new RuntimeException("GameRoom object is null after mapping");
         }
 
-        gameRoomService.createGameRoom(gameRoom);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        GameRoomResponseDto response = gameRoomService.createGameRoom(gameRoom);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/{gameroom-id}/join/{member-id}")
-    public ResponseEntity<Void> joinGame(@PathVariable("gameroom-id") long gameRoomId, @PathVariable("member-id") Long memberId) {
-        if (gameRoomService.joinGame(gameRoomId, memberId)) {
-            return ResponseEntity.ok().build();
+
+    @PostMapping("/{game-room-id}/join/{member-id}")
+    public ResponseEntity<GameRoomResponseDto> joinGame(@PathVariable("game-room-id") long gameRoomId, @PathVariable("member-id") Long memberId) {
+        try {
+            GameRoomResponseDto response = gameRoomService.joinGame(gameRoomId, memberId);
+            return ResponseEntity.ok(response);
+        } catch (BusinessLogicException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null); // 필요한 경우 메시지를 추가할 수 있어
         }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
 
-    @DeleteMapping("/{gameroom-id}/leave/{member-id}")
-    public ResponseEntity<String> leaveGame(
-            @PathVariable("gameroom-id") long gameRoomId, @PathVariable("member-id") Long memberId) {
-
-        boolean success = gameRoomService.leaveGame(gameRoomId, memberId);
-
-        if (success) {
-            return ResponseEntity.ok("Successfully left the game.");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Game room not found or member not in the game.");
+    @PostMapping("/{game-room-id}/leave/{member-id}")
+    public ResponseEntity<GameRoomResponseDto> leaveGame(@PathVariable("game-room-id") long gameRoomId, @PathVariable("member-id") Long memberId) {
+        try {
+            GameRoomResponseDto response = gameRoomService.leaveGame(gameRoomId, memberId);
+            return ResponseEntity.ok(response);
+        } catch (BusinessLogicException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null); // 필요한 경우 메시지를 추가할 수 있어
         }
     }
 }
