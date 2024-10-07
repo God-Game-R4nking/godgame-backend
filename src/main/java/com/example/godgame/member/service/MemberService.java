@@ -78,6 +78,14 @@ public class MemberService {
         return memberRepository.save(findMember);
     }
 
+
+    public void resetPassword(String password, long memberId){
+        Member findMember = findVerifiedMemberId(memberId);
+        findMember.setPassword(passwordEncoder.encode(password));
+        findMember.setModifiedAt(LocalDateTime.now());
+        memberRepository.save(findMember);
+    }
+
     public Member updatePassword(String newPassword, String id){
         Member findMember = findVerifiedMember(id);
 
@@ -119,6 +127,22 @@ public class MemberService {
         }
         return memberRepository.save(findMember);
     }
+
+    public Long validateMember(Member fixMember) {
+        // 사용자가 입력한 정보로 멤버 조회
+        Optional<Member> optionalMember = memberRepository.findByMemberNameAndPhoneAndIdentificationNumber(
+                fixMember.getMemberName(),
+                fixMember.getPhone(),
+                fixMember.getIdentificationNumber()
+        );
+
+        // 멤버가 존재하지 않을 경우 예외 발생
+        Member member = optionalMember.orElseThrow(() -> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+
+        // 멤버의 ID 반환
+        return member.getMemberId();
+    }
+
 
 
     public void verifyPassword(String id, String password, String newPassword){

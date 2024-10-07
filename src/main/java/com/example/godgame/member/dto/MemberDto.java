@@ -74,6 +74,15 @@ public class MemberDto {
     @Getter
     @Setter
     @NoArgsConstructor
+    public static class PasswordReset{
+        private String password;
+    }
+
+
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class PasswordGetPatch{
         private String newPassword;
