@@ -16,6 +16,8 @@ public enum ExceptionCode {
     LEAVE_FAIL(404, "Game room leave fail"),
     GAME_ALREADY_START(404,"Game Already Start"),
     GAME_ROOM_JOIN_ERROR(404,"Game room or Member not found"),
+    BAN_EXISTS(409,"Ban exists"),
+    BAN_NOT_FOUND(404, "Ban not found"),
     PASSWORD_WRONG(400, "PASSWORD WRONG");
 
     @Getter

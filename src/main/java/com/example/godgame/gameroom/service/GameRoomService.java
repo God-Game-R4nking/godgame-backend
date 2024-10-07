@@ -2,6 +2,7 @@ package com.example.godgame.gameroom.service;
 
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.exception.ExceptionCode;
+import com.example.godgame.chat.service.ChatService;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.dto.GameRoomResponseDto;
 import com.example.godgame.history.entity.GameHistory;
@@ -22,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.prefs.BackingStoreException;
+import java.util.Set;
 
 @Service
 public class GameRoomService {
@@ -37,6 +39,9 @@ public class GameRoomService {
 
     @Autowired
     private GameRoomHistoryRepository gameRoomHistoryRepository;
+
+    @Autowired
+    private ChatService chatService; // ChatService 추가
 
 
 
@@ -235,6 +240,8 @@ public class GameRoomService {
                 gameHistoryRepository.save(gameHistory);
             }
         }
+        // 게임 종료 시 Redis에 저장된 모든 채팅 메시지를 MongoDB에 저장
+        chatService.saveAllChatsFromRedis();
     }
 
     public GameRoom getGameRoom(String gameRoomName) {
@@ -273,5 +280,19 @@ public class GameRoomService {
         }
     }
 
+    public GameRoom findGameRoomByMemberId(Long memberId) {
+        // Redis에서 모든 게임룸의 ID를 가져옵니다.
+        Set<String> allGameRoomKeys = redisGameRoomTemplate.keys("gameRoom:*");
+        if (allGameRoomKeys != null) {
+            for (String key : allGameRoomKeys) {
+                String gameRoomJson = redisGameRoomTemplate.opsForValue().get(key);
+                GameRoom gameRoom = convertFromJson(gameRoomJson);
+                if (gameRoom != null && gameRoom.getMemberIds().contains(memberId)) {
+                    return gameRoom; // 해당 memberId가 포함된 GameRoom 반환
+                }
+            }
+        }
+        return null; // 찾지 못한 경우 null 반환
+    }
 
 }

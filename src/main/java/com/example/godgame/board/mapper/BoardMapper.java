@@ -10,7 +10,7 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface BoardMapper {
-    @Mapping(source = "memberId",target = "member.memberId")
+//    @Mapping(source = "memberId",target = "member.memberId")
     Board boardPostDtoToBoard(BoardDto.Post postDto);
     Board boardPatchDtoToBoard(BoardDto.Patch patchDto);
     @Mapping(source = "member.memberId",target = "memberId")
