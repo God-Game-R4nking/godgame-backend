@@ -30,7 +30,7 @@ public class MusicController {
     }
 
     @GetMapping
-    public ResponseEntity getMusics(@RequestParam int count, @RequestParam int era) {
+    public ResponseEntity getMusics(@RequestParam int count, @RequestParam String era) {
 
         List<MusicResponseDto> musicResponseDtos = mapper.musicToMusicResponseDtos(musicService.findRandomMusic(count, era));
 

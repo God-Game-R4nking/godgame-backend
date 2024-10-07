@@ -1,13 +1,11 @@
 package com.example.godgame.websocket.webchat;
 
+import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.service.GameRoomService;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.service.MemberService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -19,6 +17,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class MyHandler extends TextWebSocketHandler {
 
@@ -27,41 +26,31 @@ public class MyHandler extends TextWebSocketHandler {
     private final MemberService memberService;
     private final GameRoomService gameRoomService;
 
+    @Autowired
+    private RedisTemplate<String, String> redisGameRoomTemplate;
+
     public MyHandler(RedisTemplate<String, ChattingMessage> chattingMessageRedisTemplate, MemberService memberService, GameRoomService gameRoomService) {
         this.chattingMessageRedisTemplate = chattingMessageRedisTemplate;
         this.memberService = memberService;
         this.gameRoomService = gameRoomService;
     }
 
+    @Autowired
+    private RedisTemplate<String, String> stringRedisTemplate;
+
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        String query = session.getUri().getQuery();
-        String userId = null;
-
-        // 쿼리 파라미터에서 userId 추출
-        if (query != null) {
-            String[] params = query.split("&");
-            for (String param : params) {
-                String[] keyValue = param.split("=");
-                if ("userId".equals(keyValue[0])) {
-                    userId = keyValue[1]; // userId 값 할당
-                }
-            }
-        }
+        String userId = (String) session.getAttributes().get("userId");
 
         if (userId != null) {
             Member member = memberService.findVerifiedMember(userId); // ID로 Member 조회
-            if (member != null) {
-                session.getAttributes().put("member", member); // 세션에 Member 저장
-                final String sessionId = session.getId();
-                sessions.put(sessionId, session);
-                String enteredMessage = member.getNickName() + "님이 입장하셨습니다.";
-                sendMessage(sessionId, new TextMessage(enteredMessage));
-            } else {
-                session.close(CloseStatus.POLICY_VIOLATION); // 유효하지 않은 ID일 경우 연결 종료
-            }
+            session.getAttributes().put("member", member); // 세션에 Member 저장
+            final String sessionId = session.getId();
+            sessions.put(sessionId, session);
+            String enteredMessage = member.getNickName() + "님이 입장하셨습니다.";
+            sendMessage(sessionId, new TextMessage(enteredMessage));
         } else {
-            session.close(CloseStatus.POLICY_VIOLATION); // userId가 없는 경우 연결 종료
+            session.close(CloseStatus.POLICY_VIOLATION); // 유효하지 않은 ID일 경우 연결 종료
         }
     }
 
@@ -104,7 +93,8 @@ public class MyHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {}
+    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+    }
 
     private void sendMessage(String sessionId, WebSocketMessage<?> message) {
         sessions.values().forEach(s -> {
@@ -121,14 +111,33 @@ public class MyHandler extends TextWebSocketHandler {
 
     // memberId로 해당하는 게임룸 ID를 가져오는 메서드
     private Long getGameRoomIdByMemberId(Long memberId) {
-        String gameRoomKey = "member:" + memberId + ":gameRoom";
-        Object gameRoomIdObj = chattingMessageRedisTemplate.opsForValue().get(gameRoomKey);
 
-        if (gameRoomIdObj != null) {
-            return Long.valueOf(gameRoomIdObj.toString());
+        // 게임룸의 키 패턴 (예: "gameRoom:*")
+        String gameRoomPattern = "gameRoom:*";
+
+        // Redis에서 모든 게임룸 키를 가져옵니다.
+        Set<String> gameRoomKeys = redisGameRoomTemplate.keys(gameRoomPattern);
+
+        if (gameRoomKeys != null) {
+            for (String gameRoomKey : gameRoomKeys) {
+                // 각 게임룸의 정보를 가져옵니다.
+                String gameRoomJson = redisGameRoomTemplate.opsForValue().get(gameRoomKey);
+                if (gameRoomJson != null) {
+                    try {
+                        // JSON을 GameRoom 객체로 변환합니다.
+                        GameRoom gameRoom = new ObjectMapper().readValue(gameRoomJson, GameRoom.class);
+
+                        // memberIds에 memberId가 포함되어 있는지 확인합니다.
+                        if (gameRoom.getMemberIds().contains(memberId)) {
+                            return gameRoom.getGameRoomId(); // 해당 게임룸 ID 반환
+                        }
+                    } catch (IOException e) {
+                        // JSON 파싱 오류 처리
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
-
         return null; // 해당하는 게임룸이 없을 경우 null 반환
     }
-
 }

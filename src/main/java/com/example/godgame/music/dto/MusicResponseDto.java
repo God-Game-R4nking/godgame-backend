@@ -14,5 +14,5 @@ public class MusicResponseDto {
     private String title;
     private String singer;
     private String musicLink;
-    private int era;
+    private String era;
 }
