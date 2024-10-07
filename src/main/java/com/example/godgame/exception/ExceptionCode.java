@@ -13,6 +13,9 @@ public enum ExceptionCode {
     COMMENT_EXISTS(409, "Comment exists"),
     COMMENT_ALREADY_DELETED(404, "Comment already deleted"),
     LIKE_NOT_FOUND(404, "Like not found"),
+    LEAVE_FAIL(404, "Game room leave fail"),
+    GAME_ALREADY_START(404,"Game Already Start"),
+    GAME_ROOM_JOIN_ERROR(404,"Game room or Member not found"),
     PASSWORD_WRONG(400, "PASSWORD WRONG");
 
     @Getter
