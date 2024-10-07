@@ -1,3 +1,12 @@
+-- 테이블이 존재하지 않는 경우에만 생성
+CREATE TABLE IF NOT EXISTS music (
+    music_id INT PRIMARY KEY,
+    title VARCHAR(255),
+    singer VARCHAR(255),
+    music_link VARCHAR(255),
+    era VARCHAR(50)
+);
+
 --Music 데이터 삽입
 INSERT IGNORE INTO music (music_id, title, singer, music_link, era) VALUES
 (1, '내사랑 내곁에', '김현식', 'https://www.youtube.com/watch?v=iJ6ThgYyhSs&t=66s', '1990'),
