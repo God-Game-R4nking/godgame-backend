@@ -46,6 +46,10 @@ public class Member {
     @Column(length = 20, nullable = false)
     private MemberStatus memberStatus = MemberStatus.MEMBER_ACTIVE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    private MemberGameStatus memberGameStatus = MemberGameStatus.MEMBER_WAIT;
+
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -65,6 +69,18 @@ public class Member {
     @OneToOne(mappedBy = "member", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
     private Ranking ranking;
 
+
+    public enum MemberGameStatus{
+        MEMBER_WAIT("대기중"),
+        MEMBER_PLAY("게임중");
+
+        @Getter
+        private String status;
+
+        MemberGameStatus(String status){
+            this.status = status;
+        }
+    }
 
     public enum MemberStatus {
         MEMBER_ACTIVE("활동중"),

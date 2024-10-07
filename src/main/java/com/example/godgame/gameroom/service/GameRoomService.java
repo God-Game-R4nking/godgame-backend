@@ -169,6 +169,9 @@ public class GameRoomService {
             String existingGameRoomKey = "member:" + memberId + ":gameRoom";
             redisGameRoomTemplate.delete(existingGameRoomKey); // 기존 게임룸 ID 삭제
 
+            // 게임 종료 시 Redis에 저장된 모든 채팅 메시지를 MongoDB에 저장
+            chatService.saveAllChatsFromRedis();
+
             return true; // 성공적으로 나감
         }
 
