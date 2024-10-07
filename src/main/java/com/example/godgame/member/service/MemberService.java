@@ -105,6 +105,17 @@ public class MemberService {
         memberRepository.save(findMember);
     }
 
+    public Member updateGameStatus(long memberId){
+        Member findMember = findVerifiedMemberId(memberId);
+
+        if(findMember.getMemberGameStatus().equals(Member.MemberGameStatus.MEMBER_WAIT)){
+            findMember.setMemberGameStatus(Member.MemberGameStatus.MEMBER_PLAY);
+        }else{
+            findMember.setMemberGameStatus(Member.MemberGameStatus.MEMBER_WAIT);
+        }
+        return memberRepository.save(findMember);
+    }
+
 
     public void verifyPassword(String id, String password, String newPassword){
         Member member = findVerifiedMember(id);
@@ -131,6 +142,14 @@ public class MemberService {
     @Transactional(readOnly = true)
     public Member findVerifiedMember(String id){
         Optional<Member> optionalMember = memberRepository.findById(id);
+        Member findMember = optionalMember.orElseThrow(() ->
+                new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+        return findMember;
+    }
+
+    @Transactional(readOnly = true)
+    public Member findVerifiedMemberId(long memberId){
+        Optional<Member> optionalMember = memberRepository.findById(memberId);
         Member findMember = optionalMember.orElseThrow(() ->
                 new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
         return findMember;
