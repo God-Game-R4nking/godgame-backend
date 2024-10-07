@@ -19,6 +19,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class GameRoomService {
@@ -254,5 +255,19 @@ public class GameRoomService {
         }
     }
 
+    public GameRoom findGameRoomByMemberId(Long memberId) {
+        // Redis에서 모든 게임룸의 ID를 가져옵니다.
+        Set<String> allGameRoomKeys = redisGameRoomTemplate.keys("gameRoom:*");
+        if (allGameRoomKeys != null) {
+            for (String key : allGameRoomKeys) {
+                String gameRoomJson = redisGameRoomTemplate.opsForValue().get(key);
+                GameRoom gameRoom = convertFromJson(gameRoomJson);
+                if (gameRoom != null && gameRoom.getMemberIds().contains(memberId)) {
+                    return gameRoom; // 해당 memberId가 포함된 GameRoom 반환
+                }
+            }
+        }
+        return null; // 찾지 못한 경우 null 반환
+    }
 
 }
