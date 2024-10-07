@@ -20,7 +20,7 @@ public interface GameRoomMapper {
 
         gameRoom.setGameRoomName(requestBody.getGameRoomName());
         gameRoom.setGameId(requestBody.getGameId());
-        gameRoom.setMaxPopulation(8);
+        gameRoom.setMaxPopulation(requestBody.getMaxPopulation());
         gameRoom.setCurrentPopulation(1);
 
         List<Long> memberIds = new ArrayList<>();
