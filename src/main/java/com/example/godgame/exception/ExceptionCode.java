@@ -18,7 +18,8 @@ public enum ExceptionCode {
     GAME_ROOM_JOIN_ERROR(404,"Game room or Member not found"),
     BAN_EXISTS(409,"Ban exists"),
     BAN_NOT_FOUND(404, "Ban not found"),
-    PASSWORD_WRONG(400, "PASSWORD WRONG");
+    PASSWORD_WRONG(400, "PASSWORD WRONG"),
+    NICKNAME_EXISTS(409, "NickName exists");
 
     @Getter
     private int status;
