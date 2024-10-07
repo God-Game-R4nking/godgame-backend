@@ -1,6 +1,11 @@
 package com.example.godgame.redis;
 
 import com.example.godgame.gameroom.GameRoom;
+import com.example.godgame.websocket.webchat.ChattingMessage;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +15,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.nio.charset.StandardCharsets;
@@ -95,4 +101,30 @@ public class RedisRepositoryConfig {
 
         return redisTemplate;
     }
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    @Bean
+    public RedisTemplate<String, ChattingMessage> redisChattingMessageTemplate(RedisConnectionFactory redisConnectionFactory) {
+        RedisTemplate<String, ChattingMessage> template = new RedisTemplate<>();
+        template.setConnectionFactory(redisConnectionFactory);
+
+        // Key Serializer를 StringRedisSerializer로 설정
+        template.setKeySerializer(new StringRedisSerializer());
+
+        // Value Serializer로 Jackson2JsonRedisSerializer를 사용하여 ChattingMessage 직렬화
+        Jackson2JsonRedisSerializer<ChattingMessage> jsonSerializer = new Jackson2JsonRedisSerializer<>(ChattingMessage.class);
+
+        // ObjectMapper에 JavaTimeModule 등록
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        jsonSerializer.setObjectMapper(objectMapper);  // ObjectMapper를 serializer에 적용
+
+        // Value와 Hash Value 모두 Jackson을 사용
+        template.setValueSerializer(jsonSerializer);
+        template.setHashValueSerializer(jsonSerializer);
+
+        return template;
+    }
+
 }
