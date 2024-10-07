@@ -14,7 +14,6 @@ import javax.persistence.*;
 public class Music {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long musicId;
 
     @Column
@@ -23,10 +22,10 @@ public class Music {
     @Column
     private String singer;
 
-    @Column
+    @Column(name = "music_link")
     private String musicLink;
 
     @Column
-    private int era;
+    private String era;
 
 }

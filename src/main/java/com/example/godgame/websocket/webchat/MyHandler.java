@@ -3,12 +3,12 @@ package com.example.godgame.websocket.webchat;
 import com.example.godgame.gameroom.service.GameRoomService;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.service.MemberService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
@@ -18,7 +18,9 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class MyHandler extends TextWebSocketHandler {
 
@@ -32,6 +34,9 @@ public class MyHandler extends TextWebSocketHandler {
         this.memberService = memberService;
         this.gameRoomService = gameRoomService;
     }
+
+    @Autowired
+    private RedisTemplate<String, String> stringRedisTemplate;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -104,7 +109,8 @@ public class MyHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {}
+    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+    }
 
     private void sendMessage(String sessionId, WebSocketMessage<?> message) {
         sessions.values().forEach(s -> {
@@ -122,13 +128,30 @@ public class MyHandler extends TextWebSocketHandler {
     // memberId로 해당하는 게임룸 ID를 가져오는 메서드
     private Long getGameRoomIdByMemberId(Long memberId) {
         String gameRoomKey = "member:" + memberId + ":gameRoom";
-        Object gameRoomIdObj = chattingMessageRedisTemplate.opsForValue().get(gameRoomKey);
+        // ListOperations을 사용하여 리스트 가져오기
+        ListOperations<String, String> listOps = stringRedisTemplate.opsForList();
+        List<String> gameRoomIds = listOps.range(gameRoomKey, 0, -1); // 전체 리스트 가져오기
 
-        if (gameRoomIdObj != null) {
-            return Long.valueOf(gameRoomIdObj.toString());
+        if (gameRoomIds == null || gameRoomIds.isEmpty()) {
+            return null; // 게임룸 ID가 없을 경우
         }
 
-        return null; // 해당하는 게임룸이 없을 경우 null 반환
+        // 각 게임룸 ID를 확인하여 memberId와 매칭되는 것을 찾아 반환
+        for (String gameRoomId : gameRoomIds) {
+            if (isMemberInGameRoom(memberId, gameRoomId)) { // memberId가 게임룸에 포함되어 있는지 확인
+                return Long.parseLong(gameRoomId); // 매칭되는 게임룸 ID 반환
+            }
+        }
+
+        return null; // 매칭되는 게임룸 ID가 없을 경우
     }
 
+    // memberId가 게임룸에 포함되어 있는지 확인하는 메서드 (예시)
+    private boolean isMemberInGameRoom(Long memberId, String gameRoomId) {
+        // 이 메서드에서 gameRoomId에 해당하는 멤버 ID를 확인하는 로직을 구현
+        // 예를 들어 Redis에서 멤버 리스트를 가져와서 확인하는 방식
+        String memberKey = "gameRoom:" + gameRoomId + ":members"; // 예시 키
+        List<String> members = stringRedisTemplate.opsForList().range(memberKey, 0, -1);
+        return members != null && members.contains(String.valueOf(memberId));
+    }
 }
