@@ -73,15 +73,21 @@ public class MemberController {
                 new SingleResponseDto<>(mapper.memberToMemberResponse(member)), HttpStatus.OK);
     }
 
-    @GetMapping("/{member-id}")
-    public ResponseEntity getMember(
-            @PathVariable("member-id") @Positive long memberId, Authentication authentication) {
+    @GetMapping("/my-info")
+    public ResponseEntity getMemberMyInfo(Authentication authentication) {
 
-        String email = authentication.getName();
-        Member member = memberService.findMember(memberId, email);
+        String id = authentication.getName();
+        Member member = memberService.findMember(id);
 
 
         return new ResponseEntity(new SingleResponseDto<>(mapper.memberToMemberResponse(member)), HttpStatus.OK);
+    }
+
+    @GetMapping("/game-member")
+    public ResponseEntity getMember(@RequestParam("memberIds") List<Long> memberIds){
+
+        List<Member> findMembers = memberService.findMembers(memberIds);
+        return new ResponseEntity(new SingleResponseDto<>(mapper.memberToMemberResponseDtos(findMembers)), HttpStatus.OK);
     }
 
     @GetMapping

@@ -13,6 +13,7 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class MemberDto {
 
@@ -60,6 +61,14 @@ public class MemberDto {
     public static class PasswordPatch{
         private String password;
         private String newPassword;
+    }
+
+    @Getter
+    @Setter
+    public static class GameRoom{
+
+        private List<Long> memberIds;
+
     }
 
     @Getter
