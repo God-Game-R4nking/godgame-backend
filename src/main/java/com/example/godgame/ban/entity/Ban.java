@@ -29,5 +29,4 @@ public class Ban {
     @ManyToOne
     @JoinColumn(name = "BAN_MEMBER_ID", nullable = false)
     private Member banMember;
-
 }
