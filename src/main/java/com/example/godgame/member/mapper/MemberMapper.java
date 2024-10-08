@@ -10,6 +10,11 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MemberMapper {
+
+   Member memberPasswordGetDtoToMember(MemberDto.PasswordGet requestBody);
+   Member memberPasswordResetDtoToMember(MemberDto.PasswordReset requestBody);
+
+
     default Member memberPostToMember(MemberDto.Post requestBody){
         Member member = new Member();
         member.setId(requestBody.getId());
@@ -21,6 +26,7 @@ public interface MemberMapper {
 
         return member;
     }
+
 
     Member memberPatchToMember(MemberDto.Patch requestBody);
 

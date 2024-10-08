@@ -42,6 +42,7 @@ public class MyHandler extends TextWebSocketHandler {
     @Autowired
     private RedisTemplate<String,String> redisGameRoomTemplate;
 
+
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String userId = (String) session.getAttributes().get("userId");
@@ -149,6 +150,4 @@ public class MyHandler extends TextWebSocketHandler {
         }
         return null; // 해당하는 게임룸이 없을 경우 null 반환
     }
-
-
 }
