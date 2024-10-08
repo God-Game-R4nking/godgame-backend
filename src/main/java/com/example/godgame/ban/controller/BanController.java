@@ -61,8 +61,8 @@ public class BanController {
         return new ResponseEntity(new SingleResponseDto<>(mapper.bansToResponseDtos(findBans)), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{member-id}")
-    public ResponseEntity deleteBan(@PathVariable("member-id") long banMemberId, Authentication authentication) {
+    @DeleteMapping("/{ban-member-id}")
+    public ResponseEntity deleteBan(@PathVariable("ban-member-id") long banMemberId, Authentication authentication) {
 
         banService.deleteBan(banMemberId, authentication);
 
