@@ -78,7 +78,7 @@ public class MyHandler extends TextWebSocketHandler {
                 publishToGameRoom(gameRoomId, objectMapper.writeValueAsString(chattingMessage));
             }
         } else {
-            session.sendMessage(new TextMessage("사용자 정보가 없습니다. 다시 로그인하세요."));
+            session.sendMessage(new TextMessage("사용자 정보가 없습니다. 다시 접속하세요."));
         }
     }
 

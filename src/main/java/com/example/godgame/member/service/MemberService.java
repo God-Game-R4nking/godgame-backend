@@ -22,10 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Transactional
 @Service
@@ -92,9 +89,20 @@ public class MemberService {
         return memberRepository.save(findMember);
     }
 
-    public Member findMember(long memberId, String id) {
+    public Member findMember(String id) {
         // TODO should business logic
         return findVerifiedMember(id);
+    }
+
+    public List<Member> findMembers(List<Long> memberIds){
+        List<Member> findMembers = new ArrayList<>();
+
+        for( Long memberId : memberIds){
+            Member findMember = findVerifiedMemberId(memberId);
+            findMembers.add(findMember);
+        }
+
+        return findMembers;
     }
 
     public Page<Member> findALlMember(int page, int size){

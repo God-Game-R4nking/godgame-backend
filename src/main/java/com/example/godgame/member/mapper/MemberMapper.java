@@ -5,6 +5,7 @@ import com.example.godgame.member.entity.Member;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
@@ -30,6 +31,18 @@ public interface MemberMapper {
         member.setPhone(requestBody.getPhone());
 
         return member;
+    }
+
+    default List<Member> gameMemberToMember(MemberDto.GameRoom requestBody){
+        List<Member> members = new ArrayList<>();
+
+        for(int i = 0; i < requestBody.getMemberIds().size(); i++){
+            Member member = new Member();
+            member.setMemberId(requestBody.getMemberIds().get(i));
+            members.add(member);
+        }
+
+        return members;
     }
 
     default MemberDto.Response memberToMemberResponse(Member member){

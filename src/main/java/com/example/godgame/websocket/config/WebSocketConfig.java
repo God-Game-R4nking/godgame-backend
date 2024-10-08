@@ -39,21 +39,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
         this.objectMapper = objectMapper;
     }
 
-    @Getter
-    @Value("${jwt.key}")
-    private String secretKeyString;
-
-    private SecretKey secretKey;
-
-    @PostConstruct
-    public void init() {
-        this.secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes(StandardCharsets.UTF_8));
-    }
-
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(myHandler(), "/myHandler")
-                .addInterceptors(new JwtHandshakeInterceptor(secretKey))
+                .addInterceptors(new JwtHandshakeInterceptor())
                 .setAllowedOriginPatterns("*");
     }
 
