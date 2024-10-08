@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +43,6 @@ public class GameRoomService {
 
     @Autowired
     private ChatService chatService; // ChatService 추가
-
 
 
     public GameRoomResponseDto createGameRoom(GameRoom gameRoom) {
@@ -134,7 +134,6 @@ public class GameRoomService {
         // 최대 인원수 초과시 입장 실패
         if (gameRoom.getCurrentPopulation() >= gameRoom.getMaxPopulation()) {
             throw new BusinessLogicException(ExceptionCode.GAME_ROOM_JOIN_ERROR);
-
         }
 
         // 이미 존재하는 멤버 아이디일 경우 입장 실패
@@ -150,6 +149,7 @@ public class GameRoomService {
         String updatedJsonGameRoom = convertToFormattedJson(gameRoom);
         redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoomId, updatedJsonGameRoom);
 
+
         return new GameRoomResponseDto(gameRoomId,
                 gameRoom.getGameId(),
                 gameRoom.getGameRoomName(),
@@ -158,6 +158,7 @@ public class GameRoomService {
                 gameRoom.getMaxPopulation(),
                 gameRoom.getMemberIds());
     }
+
 
 
     public GameRoomResponseDto leaveGame(long gameRoomId, Long memberId) {
@@ -189,7 +190,7 @@ public class GameRoomService {
             redisGameRoomTemplate.delete(existingGameRoomKey); // 기존 게임룸 ID 삭제
 
             // 게임 종료 시 Redis에 저장된 모든 채팅 메시지를 MongoDB에 저장
-            chatService.saveAllChatsFromRedis();
+            chatService.saveAllChatsFromRedis(gameRoomId);
 
             return new GameRoomResponseDto(gameRoomId,
                     gameRoom.getGameId(),
@@ -202,6 +203,8 @@ public class GameRoomService {
 
         throw new BusinessLogicException(ExceptionCode.LEAVE_FAIL);
     }
+
+
 
     public void removeGameRoomIfEmpty(String gameRoomId) {
         String gameRoomJson = redisGameRoomTemplate.opsForValue().get(gameRoomId);
@@ -244,7 +247,7 @@ public class GameRoomService {
             }
         }
         // 게임 종료 시 Redis에 저장된 모든 채팅 메시지를 MongoDB에 저장
-        chatService.saveAllChatsFromRedis();
+        chatService.saveAllChatsFromRedis(gameRoom.getGameRoomId());
     }
 
     public GameRoom getGameRoom(String gameRoomName) {

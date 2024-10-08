@@ -19,7 +19,8 @@ public enum ExceptionCode {
     BAN_EXISTS(409,"Ban exists"),
     BAN_NOT_FOUND(404, "Ban not found"),
     BAN_DELETE_NOT_ALLOWED(404, "Ban delete not allowed"),
-    PASSWORD_WRONG(400, "PASSWORD WRONG");
+    PASSWORD_WRONG(400, "PASSWORD WRONG"),
+    NICKNAME_EXISTS(409, "NickName exists");
 
     @Getter
     private int status;

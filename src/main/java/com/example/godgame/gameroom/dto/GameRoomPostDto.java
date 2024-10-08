@@ -13,5 +13,6 @@ public class GameRoomPostDto {
     private String gameRoomName;
     private long memberId;
     private long gameId;
+    private int maxPopulation;
 }
 

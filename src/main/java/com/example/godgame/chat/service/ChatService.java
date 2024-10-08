@@ -45,9 +45,9 @@ public class ChatService {
         return chatRepository.findByGameRoomId(gameRoomId);
     }
 
-    public void saveAllChatsFromRedis() {
+    public void saveAllChatsFromRedis(Long gameRoomId) {
         while (true) {
-            ChattingMessage chattingMessage = chattingMessageRedisTemplate.opsForList().leftPop(redisKey);
+            ChattingMessage chattingMessage = chattingMessageRedisTemplate.opsForList().leftPop(redisKey + ":" + gameRoomId);
             if (chattingMessage == null) {
                 break; // 더 이상 꺼낼 메시지가 없으면 종료
             }
