@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 // 레디스에서 사용할 게임룸 클래스 정의
@@ -22,7 +21,7 @@ public class GameRoom {
     private String gameRoomStatus = "wait";
     private String publicStatus = "public";
     private List<Long> memberIds;
-    private long gameId; // 게임 ID 추가
+    private String gameName;
 
     // 멤버 추가 메서드
     public boolean addMember(Long memberId) {

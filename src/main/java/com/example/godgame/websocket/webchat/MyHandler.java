@@ -1,6 +1,7 @@
 package com.example.godgame.websocket.webchat;
 
 import com.example.godgame.chat.entity.Chat;
+import com.example.godgame.game.service.GameService;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.service.GameRoomService;
 import com.example.godgame.member.entity.Member;
@@ -68,6 +69,19 @@ public class MyHandler extends TextWebSocketHandler {
         if (member != null) {
             Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
             if (gameRoomId != null) {
+                GameRoom gameRoom = gameRoomService.getGameRoom("gameRoom:" + gameRoomId);
+                if (gameRoom != null && "게임중".equals(gameRoom.getGameRoomStatus())) {
+                    // 정답 제출 처리
+                    GameService gameService = gameRoomService.getGameService(gameRoom.getGameName());
+
+                    if (gameService != null) {
+                        boolean isCorrect = gameService.guessAnswer(member, message.getPayload());
+                        if(isCorrect) {
+                            String correctMessage = member.getNickName() + "님이 정답을 맞혔습니다: " + message.getPayload();
+                            publishToGameRoom(gameRoomId, correctMessage);
+                        }
+                    }
+                } else {
                 ChattingMessage chattingMessage = new ChattingMessage();
                 chattingMessage.setChatId(redisTemplate.opsForValue().increment("chatIdCounter"));
                 chattingMessage.setMemberId(member.getMemberId());
@@ -76,7 +90,8 @@ public class MyHandler extends TextWebSocketHandler {
                 chattingMessage.setContent(message.getPayload());
                 chattingMessage.setCreatedAt(LocalDateTime.now());
 
-                publishToGameRoom(gameRoomId, objectMapper.writeValueAsString(chattingMessage));
+                publishToGameRoom(gameRoomId, member.getNickName() + ": " + message.getPayload() );
+                }
             }
         } else {
             session.sendMessage(new TextMessage("사용자 정보가 없습니다. 다시 접속하세요."));

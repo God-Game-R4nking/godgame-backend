@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class GameRoomResponseDto {
     private long gameRoomId;
-    private long gameId;
+    private String gameName;
     private String gameRoomName;
     private int currentPopulation;
     private String gameRoomStatus;
