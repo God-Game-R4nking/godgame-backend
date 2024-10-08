@@ -28,6 +28,9 @@ public class ErrorResponse {
         this.violationErrors = violationErrors;
     }
 
+    public <T> ErrorResponse(HttpStatus httpStatus, String nullValueEncountered, List<T> ts) {
+    }
+
     public static ErrorResponse of(BindingResult bindingResult) {
         return new ErrorResponse(FieldError.of(bindingResult), null);
     }

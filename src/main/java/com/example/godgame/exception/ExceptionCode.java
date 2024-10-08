@@ -18,6 +18,7 @@ public enum ExceptionCode {
     GAME_ROOM_JOIN_ERROR(404,"Game room or Member not found"),
     BAN_EXISTS(409,"Ban exists"),
     BAN_NOT_FOUND(404, "Ban not found"),
+    BAN_DELETE_NOT_ALLOWED(404, "Ban delete not allowed"),
     PASSWORD_WRONG(400, "PASSWORD WRONG");
 
     @Getter
