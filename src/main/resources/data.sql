@@ -1,4 +1,18 @@
 -- 테이블이 존재하지 않는 경우에만 생성
+CREATE TABLE IF NOT EXISTS game (
+    game_name VARCHAR(255) PRIMARY KEY,
+    game_status VARCHAR(255)
+);
+
+--Game 데이터 삽입
+INSERT IGNORE INTO game (game_name, game_status) VALUES
+('Catchmind', 'ACTIVE'),
+('Music', 'ACTIVE'),
+('Teenieping', 'ACTIVE'),
+('Country', 'ACTIVE'),
+('People', 'ACTIVE');
+
+-- 테이블이 존재하지 않는 경우에만 생성
 CREATE TABLE IF NOT EXISTS music (
     music_id BIGINT PRIMARY KEY,
     title VARCHAR(255),

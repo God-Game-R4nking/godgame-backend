@@ -1,6 +1,5 @@
 package com.example.godgame.game.entity;
 
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,10 +12,7 @@ import javax.persistence.*;
 @Entity
 public class Game {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long gameId;
-
-    @Column(nullable = false, length = 30)
+    @Column(name = "game_name", nullable = false, length = 30)
     private String gameName;
 
     @Column

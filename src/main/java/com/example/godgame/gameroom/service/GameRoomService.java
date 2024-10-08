@@ -3,12 +3,14 @@ package com.example.godgame.gameroom.service;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.exception.ExceptionCode;
 import com.example.godgame.chat.service.ChatService;
+import com.example.godgame.game.service.GameService;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.dto.GameRoomResponseDto;
 import com.example.godgame.history.entity.GameHistory;
 import com.example.godgame.history.entity.GameRoomHistory;
 import com.example.godgame.history.repository.GameHistoryRepository;
 import com.example.godgame.history.repository.GameRoomHistoryRepository;
+import com.example.godgame.member.entity.Member;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.prefs.BackingStoreException;
 import java.util.Set;
@@ -43,6 +47,21 @@ public class GameRoomService {
 
     @Autowired
     private ChatService chatService; // ChatService 추가
+
+    @Autowired
+    private Map<String, GameService> gameServiceMap = new HashMap<>();
+
+    @Autowired
+    public GameRoomService(List<GameService> gameServices) {
+        // 각 게임 서비스들을 매핑
+        for (GameService gameService : gameServices) {
+            gameServiceMap.put(gameService.getClass().getSimpleName(), gameService);
+        }
+    }
+
+    public GameService getGameService(String gameName) {
+        return gameServiceMap.get(gameName);
+    }
 
 
     public GameRoomResponseDto createGameRoom(GameRoom gameRoom) {
@@ -82,6 +101,14 @@ public class GameRoomService {
         // Redis에 게임룸 저장 (JSON 문자열)
         redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoomId, jsonGameRoom);
 
+        // (추가) 게임 선택 및 서비스 호출
+        GameService gameService = gameServiceMap.get(gameRoom.getGameName());
+        if(gameService == null) {
+            throw new BusinessLogicException(ExceptionCode.GAME_NOT_FOUND);
+        } else {
+            gameService.initializeGameRoom(gameRoom);
+        }
+
         // 게임룸 히스토리 생성 및 DB 저장
         GameRoomHistory gameRoomHistory = new GameRoomHistory();
         gameRoomHistory.setCurrentMember(gameRoom.getCurrentPopulation());
@@ -92,7 +119,7 @@ public class GameRoomService {
         System.out.println("Game room created with ID: " + gameRoomId);
 
         // GameRoomResponseDto 반환
-        return new GameRoomResponseDto(gameRoomId,gameRoom.getGameId(),
+        return new GameRoomResponseDto(gameRoomId, gameRoom.getGameName(),
                 gameRoom.getGameRoomName(),
                 gameRoom.getCurrentPopulation(),
                 gameRoom.getGameRoomStatus(),
@@ -105,6 +132,7 @@ public class GameRoomService {
         GameRoom gameRoom = convertFromJson(gameRoomJson); // JSON에서 역직렬화
         if (gameRoom != null && "대기중".equals(gameRoom.getGameRoomStatus())) {
             gameRoom.setGameRoomStatus("게임중");
+
             redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoomId, convertToFormattedJson(gameRoom)); // JSON으로 업데이트
 
             GameRoomHistory gameRoomHistory = new GameRoomHistory();
@@ -120,7 +148,6 @@ public class GameRoomService {
             }
         }
     }
-
 
     public GameRoomResponseDto joinGame(long gameRoomId, Long memberId) {
         String gameRoomJson = redisGameRoomTemplate.opsForValue().get("gameRoom:" + gameRoomId);
@@ -151,7 +178,7 @@ public class GameRoomService {
 
 
         return new GameRoomResponseDto(gameRoomId,
-                gameRoom.getGameId(),
+                gameRoom.getGameName(),
                 gameRoom.getGameRoomName(),
                 gameRoom.getCurrentPopulation(),
                 gameRoom.getGameRoomStatus(),
@@ -193,7 +220,7 @@ public class GameRoomService {
             chatService.saveAllChatsFromRedis(gameRoomId);
 
             return new GameRoomResponseDto(gameRoomId,
-                    gameRoom.getGameId(),
+                    gameRoom.getGameName(),
                     gameRoom.getGameRoomName(),
                     gameRoom.getCurrentPopulation(),
                     gameRoom.getGameRoomStatus(),
@@ -239,7 +266,7 @@ public class GameRoomService {
             for (Long memberId : gameRoom.getMemberIds()) {
                 GameHistory gameHistory = new GameHistory();
                 gameHistory.setMemberId(memberId);
-                gameHistory.setGameId(gameRoom.getGameId());
+                gameHistory.setGameName(gameRoom.getGameName());
                 gameHistory.setScore(scores.getOrDefault(memberId, 0)); // 점수 가져오기, 없으면 0
                 gameHistory.setCreatedAt(LocalDateTime.now());
                 gameHistory.setModifiedAt(LocalDateTime.now());
@@ -299,6 +326,27 @@ public class GameRoomService {
             }
         }
         return null; // 찾지 못한 경우 null 반환
+    }
+
+//    public boolean processAnswer(Member member, String guess, Long gameRoomId) {
+//        GameRoom gameRoom = getGameRoom("gameRoom:" + gameRoomId);
+//        GameService gameService = gameServiceMap.get(gameRoom.getGameName());
+//
+//        if (gameService != null) {
+//            boolean isCorrect = gameService.guessAnswer(member, guess);
+//
+//            if (isCorrect) {
+//                String correctMessage = member.getNickName() + "님이 정답을 맞혔습니다: " + guess;
+//                publishToGameRoom(gameRoomId, correctMessage);
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
+
+    public void publishToGameRoom(Long gameRoomId, String message) {
+        String topic = "gameRoom:" + gameRoomId;
+        redisGameRoomTemplate.convertAndSend(topic, message); // Redis를 통해 메시지 퍼블리시
     }
 
 }

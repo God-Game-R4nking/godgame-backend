@@ -22,7 +22,7 @@ public class GameHistory {
     private long memberId;
 
     @Column
-    private long gameId;
+    private String gameName;
 
     @Column
     private int score;

@@ -10,9 +10,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GameRoomPostDto {
+    private String gameName;
     private String gameRoomName;
     private long memberId;
-    private long gameId;
     private int maxPopulation;
 }
 

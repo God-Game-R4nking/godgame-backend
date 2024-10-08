@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface CatchmindRepository extends JpaRepository<Catchmind, Long> {
 
-    @Query(value = "SELECT * FROM catchmind ORDER BY RAND() LIMIT :count", nativeQuery = true)
+    @Query(value = "SELECT c.word FROM catchmind c ORDER BY RAND() LIMIT :count", nativeQuery = true)
     List<Catchmind> findRandomCatchminds(@Param("count") int count);
 }
