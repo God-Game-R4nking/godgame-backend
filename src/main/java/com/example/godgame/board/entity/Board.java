@@ -29,6 +29,9 @@ public class Board {
     @Column(nullable = false)
     private String content;
 
+    @Column(nullable = false)
+    private int viewCount = 0;
+
     @Column
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -47,6 +50,10 @@ public class Board {
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "board", cascade = CascadeType.PERSIST)
+    @JsonManagedReference
+    private List<View> views = new ArrayList<>();
 
     public enum BoardStatus {
         BOARD_REGISTERED("등록 게시물"),
