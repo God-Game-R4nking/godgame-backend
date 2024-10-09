@@ -53,6 +53,8 @@ public class BoardDto {
         private String content;
         private Board.BoardStatus boardStatus;
         private long memberId;
+        private String nickName;
+        private int viewCount;
         private List<CommentResponseDto> comments;
         private int currentPage;
         private int totalPages;

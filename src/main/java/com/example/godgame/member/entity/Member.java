@@ -1,6 +1,7 @@
 package com.example.godgame.member.entity;
 
 import com.example.godgame.board.entity.Board;
+import com.example.godgame.board.entity.View;
 import com.example.godgame.ranking.entity.Ranking;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
@@ -68,6 +69,10 @@ public class Member {
 
     @OneToOne(mappedBy = "member", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
     private Ranking ranking;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.PERSIST)
+    @JsonManagedReference
+    private List<View> views = new ArrayList<>();
 
 
     public enum MemberGameStatus{

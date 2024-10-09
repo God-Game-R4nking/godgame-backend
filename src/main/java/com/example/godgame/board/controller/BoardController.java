@@ -63,11 +63,12 @@ public class BoardController {
 
     @GetMapping("/{board-id}")
     public ResponseEntity getBoard(@PathVariable("board-id") @Positive long boardId,
-                                               @Positive @RequestParam int page,
-                                               @Positive @RequestParam int size) {
+                                   @Positive @RequestParam int page,
+                                   @Positive @RequestParam int size,
+                                   Authentication authentication) {
 
         // 게시글과 댓글을 함께 조회
-        BoardDto.Response boardWithComments = boardService.getBoardWithComments(boardId, page, size);
+        BoardDto.Response boardWithComments = boardService.getBoardWithComments(boardId, page, size, authentication);
 
         return new ResponseEntity<>(new SingleResponseDto<>(boardWithComments), HttpStatus.OK);
     }
@@ -90,12 +91,4 @@ public class BoardController {
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-
-//    @GetMapping("/{board-id}")
-//    public ResponseEntity getBoard(@PathVariable("board-id") @Positive long boardId, int page, int size) {
-//
-//        Board getBoard = boardService.findBoard(boardId);
-//        Page<Comment> comments = commentService.findComments(boardId, page, size);
-//        return new ResponseEntity<>(new SingleResponseDto<>(boardMapper.boardToResponseDto(getBoard)), HttpStatus.OK);
-//    }
 }
