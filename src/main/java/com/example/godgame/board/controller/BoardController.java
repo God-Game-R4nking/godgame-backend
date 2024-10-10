@@ -42,7 +42,6 @@ public class BoardController {
 
     @PostMapping
     public ResponseEntity postBoard(@Valid @RequestBody BoardDto.Post requestBody, Authentication authentication) {
-
         Board board = boardMapper.boardPostDtoToBoard(requestBody);
         Board createdBoard = boardService.createBoard(board, authentication);
         URI location = UriCreator.createUri(BOARD_DEFAULT_URL, createdBoard.getBoardId());
@@ -63,17 +62,15 @@ public class BoardController {
 
     @GetMapping("/{board-id}")
     public ResponseEntity getBoard(@PathVariable("board-id") @Positive long boardId,
-                                   @Positive @RequestParam int page,
-                                   @Positive @RequestParam int size,
                                    Authentication authentication) {
 
         // 게시글과 댓글을 함께 조회
-        BoardDto.Response boardWithComments = boardService.getBoardWithComments(boardId, page, size, authentication);
+        Board board = boardService.getBoard(boardId, authentication);
 
-        return new ResponseEntity<>(new SingleResponseDto<>(boardWithComments), HttpStatus.OK);
+        return new ResponseEntity(new SingleResponseDto<>(boardMapper.boardToResponseDto(board)), HttpStatus.OK);
     }
 
-    @GetMapping
+    @GetMapping("/gets")
     public ResponseEntity getBoards(@Positive @RequestParam int page,
                                     @Positive @RequestParam int size){
 

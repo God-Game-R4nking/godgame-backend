@@ -41,7 +41,7 @@ public class Comment {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(nullable = false)
-    private LocalDateTime modifiedAt;
+    private LocalDateTime modifiedAt = LocalDateTime.now();
 
     public enum CommentStatus {
         COMMENT_REGISTERED("등록 댓글"),

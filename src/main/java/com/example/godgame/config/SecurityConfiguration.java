@@ -65,6 +65,10 @@ public class SecurityConfiguration {
                         .antMatchers(HttpMethod.GET, "/members/**").permitAll()
                         .antMatchers(HttpMethod.DELETE, "/members/**").hasRole("USER")
                         .antMatchers(HttpMethod.POST, "/api/authenticate").hasRole("USER")
+                        .antMatchers(HttpMethod.POST, "/boards").hasRole("USER")
+                        .antMatchers(HttpMethod.POST, "/comments").hasRole("USER")
+                        .antMatchers(HttpMethod.GET, "/boards").hasAnyRole("USER", "ADMIN")
+                        .antMatchers(HttpMethod.GET, "/boards/gets").permitAll()
                         .anyRequest().permitAll()
                 );
         return http.build();
@@ -79,7 +83,7 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PATCH", "DELETE"));
-        configuration.addAllowedOrigin("https://localhost:3000");
+        configuration.addAllowedOrigin("http://localhost:3000");
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Refresh"));
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");

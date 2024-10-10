@@ -55,7 +55,6 @@ public class BoardDto {
         private long memberId;
         private String nickName;
         private int viewCount;
-        private List<CommentResponseDto> comments;
         private int currentPage;
         private int totalPages;
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
@@ -64,9 +63,6 @@ public class BoardDto {
         private LocalDateTime modifiedAt;
 
         public String setBoardStatus() {return boardStatus.getStatus();}
-        public void setComments(List<CommentResponseDto> comments) {this.comments = comments;}
-        public void setCurrentPage(int currentPage) {this.currentPage = currentPage;}
-        public void setTotalPages(int totalPages) {this.totalPages = totalPages;}
     }
 
     public static class CommentResponseDto {
