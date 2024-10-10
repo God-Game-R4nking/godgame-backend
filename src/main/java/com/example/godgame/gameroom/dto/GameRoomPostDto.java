@@ -12,6 +12,7 @@ import lombok.Setter;
 public class GameRoomPostDto {
     private String gameName;
     private String gameRoomName;
+    private int count;
     private long memberId;
     private int maxPopulation;
 }

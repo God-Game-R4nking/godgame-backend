@@ -4,6 +4,7 @@ import com.example.godgame.catchmind.entity.Catchmind;
 import com.example.godgame.catchmind.repository.CatchmindRepository;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.exception.ExceptionCode;
+import com.example.godgame.game.service.CatchmindGameService;
 import com.example.godgame.game.service.GameService;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.member.entity.Member;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 @Service("Catchmind")
 @Transactional
 @EnableScheduling
-public class CatchmindService implements GameService {
+public class CatchmindService extends CatchmindGameService {
 
 
     private final CatchmindRepository catchmindRepository;
@@ -36,7 +37,7 @@ public class CatchmindService implements GameService {
     private final Map<GameRoom, Map<Member, Integer>> gameRoomScores = new HashMap<>();
     private final Map<GameRoom, Integer> gameRoomRoundTimes = new HashMap<>();
     private final Map<GameRoom, ScheduledExecutorService> schedulers = new HashMap<>();
-    private boolean isGameRunning = false;
+    private boolean isGameRunning;
 
     public CatchmindService(CatchmindRepository catchmindRepository, RedisTemplate<String, GameRoom> redisTemplate, MemberRepository memberRepository) {
         this.catchmindRepository = catchmindRepository;
@@ -46,7 +47,6 @@ public class CatchmindService implements GameService {
 
     @Override
     public void initializeGameRoom(GameRoom gameRoom) {
-        gameRoom.setCurrentPopulation(0);
         gameRoom.setGameRoomStatus("ACTIVE");
 
         gameRoomMembers.put(gameRoom, new ArrayList<>());
@@ -55,10 +55,12 @@ public class CatchmindService implements GameService {
         currentQuestionIndexes.put(gameRoom, 0);
         gameRoomScores.put(gameRoom, new HashMap<>());
         gameRoomRoundTimes.put(gameRoom, 60);
+        isGameRunning = false;
 
         redisTemplate.opsForValue().set("gameroom:" + gameRoom.getGameRoomId(), gameRoom);
     }
 
+    @Override
     public void startGame(GameRoom gameRoom, int count) {
         List<Member> members = gameRoomMembers.get(gameRoom);
 

@@ -16,6 +16,7 @@ import java.util.List;
 public class GameRoom {
     private long gameRoomId;
     private String gameRoomName;
+    private int count;
     private int maxPopulation;
     private int currentPopulation = 1; // 생성자 포함
     private String gameRoomStatus = "wait";

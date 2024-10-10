@@ -1,6 +1,5 @@
 package com.example.godgame.websocket.webchat;
 
-import com.example.godgame.chat.entity.Chat;
 import com.example.godgame.game.service.GameService;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.service.GameRoomService;
@@ -75,7 +74,7 @@ public class MyHandler extends TextWebSocketHandler {
                     GameService gameService = gameRoomService.getGameService(gameRoom.getGameName());
 
                     if (gameService != null) {
-                        boolean isCorrect = gameService.guessAnswer(member, message.getPayload());
+                        boolean isCorrect = gameService.guessAnswer(member, message.getPayload().replaceAll(" ", ""));
                         if(isCorrect) {
                             String correctMessage = member.getNickName() + "님이 정답을 맞혔습니다: " + message.getPayload();
                             publishToGameRoom(gameRoomId, correctMessage);
