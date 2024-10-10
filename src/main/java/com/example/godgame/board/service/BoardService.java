@@ -162,26 +162,8 @@ public class BoardService {
     }
 
     @Transactional
-    public BoardDto.Response getBoardWithComments(long boardId, int page, int size, Authentication authentication) {
+    public Board getBoard(long boardId, Authentication authentication) {
         // 게시글 조회
-        Board board = findBoard(boardId, authentication);
-
-        // 댓글 조회 (페이지네이션 적용)
-        Pageable pageable = PageRequest.of(page, size, Sort.by("commentId").descending());
-        Page<Comment> comments = commentRepository.findByBoardId(boardId, pageable);
-
-        // 댓글을 DTO 리스트로 변환
-        List<BoardDto.CommentResponseDto> commentDtos = comments.getContent().stream()
-                .map(commentMapper::commentToBoardResponseDto)
-                .collect(Collectors.toList());
-
-        // BoardDto.Response에 댓글 정보 추가
-        BoardDto.Response boardResponseDto = boardMapper.boardToResponseDto(board);
-        boardResponseDto.setComments(commentDtos);
-
-        boardResponseDto.setTotalPages(comments.getTotalPages()); // 총 페이지 수
-        boardResponseDto.setCurrentPage(comments.getNumber()); // 현재 페이지 번호
-
-        return boardResponseDto;
+        return findBoard(boardId, authentication);
     }
 }

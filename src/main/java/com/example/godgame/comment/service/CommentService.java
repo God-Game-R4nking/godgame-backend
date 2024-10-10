@@ -31,11 +31,9 @@ public class CommentService {
 
     @Transactional
     public Comment createComment(Comment comment, Authentication authentication) {
-
         Optional<Board> optionalBoard = boardRepository.findById(comment.getBoard().getBoardId());
         Board findBoard = optionalBoard.orElseThrow(()-> new BusinessLogicException(ExceptionCode.BOARD_NOT_FOUND));
         findBoard.getComments().add(comment);
-
         return commentRepository.save(comment);
     }
 
