@@ -5,6 +5,7 @@ import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.service.GameRoomService;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.service.MemberService;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -54,8 +55,8 @@ public class MyHandler extends TextWebSocketHandler {
             Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
             if (gameRoomId != null) {
                 subscribeToGameRoom(session, gameRoomId);
-                String enteredMessage = member.getNickName() + "님이 입장하셨습니다.";
-                publishToGameRoom(gameRoomId, enteredMessage);
+//                String enteredMessage = member.getNickName() + "님이 입장하셨습니다.";
+//                publishToGameRoom(gameRoomId, enteredMessage);
             }
         } else {
             session.close(CloseStatus.POLICY_VIOLATION);
@@ -81,15 +82,18 @@ public class MyHandler extends TextWebSocketHandler {
                         }
                     }
                 } else {
-                ChattingMessage chattingMessage = new ChattingMessage();
-                chattingMessage.setChatId(redisTemplate.opsForValue().increment("chatIdCounter"));
-                chattingMessage.setMemberId(member.getMemberId());
-                chattingMessage.setNickName(member.getNickName());
-                chattingMessage.setGameRoomId(gameRoomId);
-                chattingMessage.setContent(message.getPayload());
-                chattingMessage.setCreatedAt(LocalDateTime.now());
-
-                publishToGameRoom(gameRoomId, member.getNickName() + ": " + message.getPayload() );
+                    ChattingMessage parseChattingMessage = objectMapper.readValue(message.getPayload(), ChattingMessage.class);
+//                    ChattingMessage parseChattingMessage = objectMapper.treeToValue(jsonNode.get("content"), ChattingMessage.class);
+                    ChattingMessage chattingMessage = new ChattingMessage();
+                    chattingMessage.setChatId(redisTemplate.opsForValue().increment("chatIdCounter"));
+                    chattingMessage.setMemberId(parseChattingMessage.getMemberId());
+                    chattingMessage.setNickName(parseChattingMessage.getNickName());
+                    chattingMessage.setGameRoomId(parseChattingMessage.getGameRoomId());
+                    chattingMessage.setContent(parseChattingMessage.getContent());
+                    chattingMessage.setCreatedAt(LocalDateTime.now());
+                    chattingMessage.setType(parseChattingMessage.getType());
+                    System.out.println("sajdddhjksadjkkkkkkkkkkkkkkkkkkkkkkkkk" + chattingMessage.getNickName());
+                    publishToGameRoom(gameRoomId, chattingMessage.getNickName() + ":" + chattingMessage.getContent());
                 }
             }
         } else {
