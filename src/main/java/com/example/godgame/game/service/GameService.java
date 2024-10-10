@@ -10,4 +10,8 @@ public interface GameService {
     void endGame(GameRoom gameRoom);
     boolean guessAnswer(Member member, String guess);
     String getCurrentAnswer();
+
+    boolean guessAnswer(GameRoom gameRoom, Member member, String guess);
+
+    String getCurrentAnswer(GameRoom gameRoom);
 }

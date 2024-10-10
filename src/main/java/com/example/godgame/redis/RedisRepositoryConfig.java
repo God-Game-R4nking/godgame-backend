@@ -127,4 +127,13 @@ public class RedisRepositoryConfig {
         return template;
     }
 
+    @Bean
+    public RedisTemplate<String, GameRoom> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, GameRoom> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer()); // JSON 직렬화
+        return template;
+    }
+
 }

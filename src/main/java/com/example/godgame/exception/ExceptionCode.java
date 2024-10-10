@@ -18,6 +18,7 @@ public enum ExceptionCode {
     GAME_ALREADY_START(404,"Game Already Start"),
     GAME_ROOM_JOIN_ERROR(404,"Game room or Member not found"),
     GAME_NOT_FOUND(404, "Game not found"),
+    GAME_ROOM_NOT_FOUND(404, "Game room not found"),
     NEED_MORE_MEMBER(404,"Need more member"),
     BAN_EXISTS(409,"Ban exists"),
     BAN_NOT_FOUND(404, "Ban not found"),
