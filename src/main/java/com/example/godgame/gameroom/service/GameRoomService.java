@@ -3,6 +3,8 @@ package com.example.godgame.gameroom.service;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.exception.ExceptionCode;
 import com.example.godgame.chat.service.ChatService;
+import com.example.godgame.game.entity.Game;
+import com.example.godgame.game.repository.GameRepository;
 import com.example.godgame.game.service.GameService;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.dto.GameRoomResponseDto;
@@ -21,6 +23,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -50,6 +53,10 @@ public class GameRoomService {
     private Map<String, GameService> gameServiceMap = new HashMap<>();
 
     @Autowired
+    private GameRepository gameRepository;
+    private Set<String> validGameNames;
+  
+    @Autowired
     private MemberService memberService;
 
     @Autowired
@@ -64,8 +71,12 @@ public class GameRoomService {
         return gameServiceMap.get(gameName);
     }
 
-
     public GameRoomResponseDto createGameRoom(GameRoom gameRoom) {
+        // 게임 이름 유효성 검사
+        if (!isValidGameName(gameRoom.getGameName())) {
+            throw new BusinessLogicException(ExceptionCode.GAME_NOT_FOUND);
+        }
+
         // ID 카운터 초기화 및 증가
         Long gameRoomId = redisGameRoomTemplate.opsForValue().increment("gameRoomIdCounter");
         if (gameRoomId == null) {
@@ -236,8 +247,6 @@ public class GameRoomService {
         throw new BusinessLogicException(ExceptionCode.LEAVE_FAIL);
     }
 
-
-
     public void removeGameRoomIfEmpty(String gameRoomId) {
         String gameRoomJson = redisGameRoomTemplate.opsForValue().get(gameRoomId);
         GameRoom gameRoom = convertFromJson(gameRoomJson); // JSON 문자열을 GameRoom 객체로 변환
@@ -405,25 +414,14 @@ public class GameRoomService {
         return null; // 찾지 못한 경우 null 반환
     }
 
-//    public boolean processAnswer(Member member, String guess, Long gameRoomId) {
-//        GameRoom gameRoom = getGameRoom("gameRoom:" + gameRoomId);
-//        GameService gameService = gameServiceMap.get(gameRoom.getGameName());
-//
-//        if (gameService != null) {
-//            boolean isCorrect = gameService.guessAnswer(member, guess);
-//
-//            if (isCorrect) {
-//                String correctMessage = member.getNickName() + "님이 정답을 맞혔습니다: " + guess;
-//                publishToGameRoom(gameRoomId, correctMessage);
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-
     public void publishToGameRoom(Long gameRoomId, String message) {
         String topic = "gameRoom:" + gameRoomId;
         redisGameRoomTemplate.convertAndSend(topic, message); // Redis를 통해 메시지 퍼블리시
+    }
+
+    private boolean isValidGameName(String gameName) {
+        List<Game> games = gameRepository.findAll();
+        return games.stream().anyMatch(game -> game.getGameName().equals(gameName));
     }
 
 }

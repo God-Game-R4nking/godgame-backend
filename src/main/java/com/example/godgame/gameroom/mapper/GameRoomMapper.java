@@ -21,6 +21,7 @@ public interface GameRoomMapper {
 
         gameRoom.setGameRoomName(requestBody.getGameRoomName());
         gameRoom.setGameName(requestBody.getGameName());
+        gameRoom.setCount(requestBody.getCount());
         gameRoom.setMaxPopulation(requestBody.getMaxPopulation());
         gameRoom.setCurrentPopulation(1);
 
