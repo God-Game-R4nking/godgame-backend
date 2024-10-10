@@ -1,5 +1,6 @@
 package com.example.godgame.gameroom.controller;
 
+import com.example.godgame.dto.SingleResponseDto;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.dto.GameRoomPostDto;
@@ -10,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/game-rooms")
@@ -57,6 +60,14 @@ public class GameRoomController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null); // 필요한 경우 메시지를 추가할 수 있어
         }
     }
+
+    @GetMapping
+    public ResponseEntity getGameRooms(){
+            List<GameRoomResponseDto> response = gameRoomMapper.gameRoomsToGameRoomResponseDtos(gameRoomService.getGameRooms());
+
+            return new ResponseEntity(new SingleResponseDto<>(response), HttpStatus.OK);
+    }
+
 }
 
 

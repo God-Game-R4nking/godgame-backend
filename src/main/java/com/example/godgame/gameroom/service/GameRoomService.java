@@ -24,11 +24,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.prefs.BackingStoreException;
-import java.util.Set;
 
 @Service
 public class GameRoomService {
@@ -281,6 +278,29 @@ public class GameRoomService {
         String gameRoomJson = redisGameRoomTemplate.opsForValue().get(gameRoomName);
         return convertFromJson(gameRoomJson); // JSON에서 역직렬화
     }
+
+    public List<GameRoom> getGameRooms() {
+        // Redis에서 모든 게임룸의 키를 가져옵니다.
+        Set<String> gameRoomKeys = redisGameRoomTemplate.keys("gameRoom:*");
+
+        if (gameRoomKeys == null || gameRoomKeys.isEmpty()) {
+            return Collections.emptyList(); // 게임룸이 없는 경우 빈 리스트 반환
+        }
+
+        List<GameRoom> gameRooms = new ArrayList<>();
+
+        // 각 게임룸 키에 대해 JSON을 가져오고, 역직렬화하여 리스트에 추가
+        for (String key : gameRoomKeys) {
+            String gameRoomJson = redisGameRoomTemplate.opsForValue().get(key);
+            GameRoom gameRoom = convertFromJson(gameRoomJson);
+            if (gameRoom != null) {
+                gameRooms.add(gameRoom);
+            }
+        }
+
+        return gameRooms;
+    }
+
 
     public long generateGameRoomId() {
         return redisGameRoomTemplate.opsForValue().increment("gameRoomIdCounter"); // "gameRoomIdCounter" 키를 사용하여 자동 증가
