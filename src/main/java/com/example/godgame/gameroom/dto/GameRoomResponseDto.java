@@ -14,6 +14,7 @@ import java.util.List;
 public class GameRoomResponseDto {
     private long gameRoomId;
     private String gameName;
+    private int count;
     private String gameRoomName;
     private int currentPopulation;
     private String gameRoomStatus;

@@ -84,6 +84,7 @@ public class CatchmindService extends CatchmindGameService {
         for (Member member : members) {
             gameRoomScores.get(gameRoom).put(member, 0); // 초기 점수 설정
         }
+
     }
 
     @Override
