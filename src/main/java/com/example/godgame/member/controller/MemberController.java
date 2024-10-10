@@ -79,7 +79,6 @@ public class MemberController {
         String id = authentication.getName();
         Member member = memberService.findMember(id);
 
-
         return new ResponseEntity(new SingleResponseDto<>(mapper.memberToMemberResponse(member)), HttpStatus.OK);
     }
 

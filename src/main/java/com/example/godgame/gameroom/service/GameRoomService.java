@@ -108,7 +108,7 @@ public class GameRoomService {
 
         // 게임룸 히스토리 생성 및 DB 저장
         GameRoomHistory gameRoomHistory = new GameRoomHistory();
-        gameRoomHistory.setCurrentMember(gameRoom.getCurrentPopulation());
+        gameRoomHistory.setCurrentPopulation(gameRoom.getCurrentPopulation());
         gameRoomHistory.setCreatedAt(LocalDateTime.now());
         gameRoomHistory.setModifiedAt(LocalDateTime.now());
         gameRoomHistoryRepository.save(gameRoomHistory);
@@ -133,7 +133,7 @@ public class GameRoomService {
             redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoomId, convertToFormattedJson(gameRoom)); // JSON으로 업데이트
 
             GameRoomHistory gameRoomHistory = new GameRoomHistory();
-            gameRoomHistory.setCurrentMember(gameRoom.getCurrentPopulation());
+            gameRoomHistory.setCurrentPopulation(gameRoom.getCurrentPopulation());
             gameRoomHistory.setCreatedAt(LocalDateTime.now());
             gameRoomHistory.setModifiedAt(LocalDateTime.now());
 
@@ -252,24 +252,29 @@ public class GameRoomService {
         }
     }
 
+
+
     public void endGame(String roomName, Map<Long, Integer> scores) {
         String gameRoomJson = redisGameRoomTemplate.opsForValue().get(roomName);
         GameRoom gameRoom = convertFromJson(gameRoomJson);
+
         if (gameRoom != null && "게임중".equals(gameRoom.getGameRoomStatus())) {
             gameRoom.setGameRoomStatus("대기중");
             redisGameRoomTemplate.opsForValue().set(roomName, convertToFormattedJson(gameRoom)); // 상태 업데이트
 
             // 각 멤버의 게임 히스토리 저장
-            for (Long memberId : gameRoom.getMemberIds()) {
-                GameHistory gameHistory = new GameHistory();
-                gameHistory.setMemberId(memberId);
-                gameHistory.setGameName(gameRoom.getGameName());
-                gameHistory.setScore(scores.getOrDefault(memberId, 0)); // 점수 가져오기, 없으면 0
-                gameHistory.setCreatedAt(LocalDateTime.now());
-                gameHistory.setModifiedAt(LocalDateTime.now());
-                gameHistoryRepository.save(gameHistory);
+            if (gameRoom.getMemberIds() != null) {
+                for (Long memberId : gameRoom.getMemberIds()) {
+                    GameHistory gameHistory = new GameHistory();
+                    gameHistory.setMemberId(memberId);
+                    gameHistory.setGameName(gameRoom.getGameName());
+                    gameHistory.setScore(scores.getOrDefault(memberId, 0)); // 점수 가져오기, 없으면 0
+                    // createdAt, modifiedAt은 기본값으로 설정되므로 필요 없음
+                    gameHistoryRepository.save(gameHistory);
+                }
             }
         }
+
         // 게임 종료 시 Redis에 저장된 모든 채팅 메시지를 MongoDB에 저장
         chatService.saveAllChatsFromRedis(gameRoom.getGameRoomId());
     }
