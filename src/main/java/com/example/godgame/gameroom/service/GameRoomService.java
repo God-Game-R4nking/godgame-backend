@@ -11,6 +11,7 @@ import com.example.godgame.history.entity.GameRoomHistory;
 import com.example.godgame.history.repository.GameHistoryRepository;
 import com.example.godgame.history.repository.GameRoomHistoryRepository;
 import com.example.godgame.member.entity.Member;
+import com.example.godgame.member.service.MemberService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,9 @@ public class GameRoomService {
 
     @Autowired
     private Map<String, GameService> gameServiceMap = new HashMap<>();
+
+    @Autowired
+    private MemberService memberService;
 
     @Autowired
     public GameRoomService(List<GameService> gameServices) {
@@ -114,14 +118,15 @@ public class GameRoomService {
         gameRoomHistoryRepository.save(gameRoomHistory);
 
         System.out.println("Game room created with ID: " + gameRoomId);
-
+        Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
         // GameRoomResponseDto 반환
         return new GameRoomResponseDto(gameRoomId, gameRoom.getGameName(),
                 gameRoom.getGameRoomName(),
                 gameRoom.getCurrentPopulation(),
                 gameRoom.getGameRoomStatus(),
                 gameRoom.getMaxPopulation(),
-                gameRoom.getMemberIds());
+                gameRoom.getMemberIds(),
+                findMember.getNickName());
     }
 
     public void startGame(long gameRoomId) {
@@ -173,14 +178,15 @@ public class GameRoomService {
         String updatedJsonGameRoom = convertToFormattedJson(gameRoom);
         redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoomId, updatedJsonGameRoom);
 
-
+        Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
         return new GameRoomResponseDto(gameRoomId,
                 gameRoom.getGameName(),
                 gameRoom.getGameRoomName(),
                 gameRoom.getCurrentPopulation(),
                 gameRoom.getGameRoomStatus(),
                 gameRoom.getMaxPopulation(),
-                gameRoom.getMemberIds());
+                gameRoom.getMemberIds(),
+                findMember.getNickName());
     }
 
 
@@ -215,6 +221,7 @@ public class GameRoomService {
 
             // 게임 종료 시 Redis에 저장된 모든 채팅 메시지를 MongoDB에 저장
             chatService.saveAllChatsFromRedis(gameRoomId);
+            Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
 
             return new GameRoomResponseDto(gameRoomId,
                     gameRoom.getGameName(),
@@ -222,7 +229,8 @@ public class GameRoomService {
                     gameRoom.getCurrentPopulation(),
                     gameRoom.getGameRoomStatus(),
                     gameRoom.getMaxPopulation(),
-                    gameRoom.getMemberIds());
+                    gameRoom.getMemberIds(),
+                    findMember.getNickName());
         }
 
         throw new BusinessLogicException(ExceptionCode.LEAVE_FAIL);
@@ -279,7 +287,36 @@ public class GameRoomService {
         return convertFromJson(gameRoomJson); // JSON에서 역직렬화
     }
 
-    public List<GameRoom> getGameRooms() {
+    public GameRoomResponseDto getGameRoom(Long gameRoomId) {
+        // Redis에서 해당 gameRoomId로 저장된 게임룸의 JSON 데이터를 가져옴
+        String gameRoomJson = redisGameRoomTemplate.opsForValue().get("gameRoom:" + gameRoomId);
+
+        // 가져온 JSON 데이터를 GameRoom 객체로 역직렬화
+        GameRoom gameRoom = convertFromJson(gameRoomJson);
+
+        if (gameRoom == null) {
+            return null; // 게임룸이 존재하지 않으면 null 반환 또는 예외 처리
+        }
+
+        // 첫 번째 멤버의 닉네임 조회
+        Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
+
+        // GameRoomResponseDto 객체 생성
+        GameRoomResponseDto gameRoomResponseDto = new GameRoomResponseDto(
+                gameRoom.getGameRoomId(),
+                gameRoom.getGameName(),
+                gameRoom.getGameRoomName(),
+                gameRoom.getCurrentPopulation(),
+                gameRoom.getGameRoomStatus(),
+                gameRoom.getMaxPopulation(),
+                gameRoom.getMemberIds(),
+                findMember.getNickName()
+        );
+
+        return gameRoomResponseDto;
+    }
+
+    public List<GameRoomResponseDto> getGameRooms() {
         // Redis에서 모든 게임룸의 키를 가져옵니다.
         Set<String> gameRoomKeys = redisGameRoomTemplate.keys("gameRoom:*");
 
@@ -298,7 +335,22 @@ public class GameRoomService {
             }
         }
 
-        return gameRooms;
+
+        List<GameRoomResponseDto> list = new ArrayList<>();
+        for(GameRoom gameRoom : gameRooms){
+            Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
+            GameRoomResponseDto gameRoomResponseDto = new GameRoomResponseDto(gameRoom.getGameRoomId(),
+                    gameRoom.getGameName(),
+                    gameRoom.getGameRoomName(),
+                    gameRoom.getCurrentPopulation(),
+                    gameRoom.getGameRoomStatus(),
+                    gameRoom.getMaxPopulation(),
+                    gameRoom.getMemberIds(),
+                    findMember.getNickName());
+            list.add(gameRoomResponseDto);
+        }
+
+        return list;
     }
 
 

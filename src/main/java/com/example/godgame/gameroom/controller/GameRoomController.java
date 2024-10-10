@@ -63,10 +63,18 @@ public class GameRoomController {
 
     @GetMapping
     public ResponseEntity getGameRooms(){
-            List<GameRoomResponseDto> response = gameRoomMapper.gameRoomsToGameRoomResponseDtos(gameRoomService.getGameRooms());
+            List<GameRoomResponseDto> response = gameRoomService.getGameRooms();
 
             return new ResponseEntity(new SingleResponseDto<>(response), HttpStatus.OK);
     }
+
+    @GetMapping("/{game-room-id}")
+    public ResponseEntity getGameRoom(@PathVariable("game-room-id") long gameRoomId){
+        GameRoomResponseDto response = gameRoomService.getGameRoom(gameRoomId);
+
+        return new ResponseEntity(new SingleResponseDto<>(response), HttpStatus.OK);
+    }
+
 
 }
 

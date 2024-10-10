@@ -19,4 +19,5 @@ public class GameRoomResponseDto {
     private String gameRoomStatus;
     private int maxPopulation;
     private List<Long> memberIds;
+    private String roomManagerName;
 }
