@@ -2,6 +2,7 @@ package com.example.godgame.gameroom.mapper;
 
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.dto.GameRoomPostDto;
+import com.example.godgame.gameroom.dto.GameRoomResponseDto;
 import org.mapstruct.Mapper;
 
 import java.util.ArrayList;
@@ -31,5 +32,8 @@ public interface GameRoomMapper {
 
         return gameRoom;
     }
+
+    GameRoomResponseDto gameRoomToGameRoomResponseDto(GameRoom gameRoom);
+    List<GameRoomResponseDto> gameRoomsToGameRoomResponseDtos(List<GameRoom> gameRooms);
 }
 
