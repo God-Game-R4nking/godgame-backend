@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class GameHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long GameHistoryId;
+    private long gameHistoryId;
 
     @Column
     private long memberId;
@@ -34,5 +34,12 @@ public class GameHistory {
     private LocalDateTime modifiedAt = LocalDateTime.now();
 
     @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "game_room_history_id")
     GameRoomHistory gameRoomHistory;
+
+    public void updateScore(int newScore) {
+        this.score = newScore;
+        this.modifiedAt = LocalDateTime.now();
+    }
+
 }

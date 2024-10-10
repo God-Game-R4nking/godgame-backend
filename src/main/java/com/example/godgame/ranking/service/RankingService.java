@@ -1,6 +1,7 @@
 package com.example.godgame.ranking.service;
 
 
+import com.example.godgame.member.entity.Member;
 import com.example.godgame.ranking.entity.Ranking;
 import com.example.godgame.ranking.repository.RankingRepository;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,14 @@ public class RankingService {
 
     public RankingService(RankingRepository rankingRepository) {
         this.rankingRepository = rankingRepository;
+    }
+
+    public Ranking createRanking(Member member){
+        Ranking ranking = new Ranking();
+        ranking.setMember(member);
+        ranking.setTotalPoint(0);
+
+        return ranking;
     }
 
     public List<Ranking> findAllRanking(){
