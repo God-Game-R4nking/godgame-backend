@@ -72,10 +72,6 @@ public class GameRoomService {
     }
 
     public GameRoomResponseDto createGameRoom(GameRoom gameRoom) {
-        // 게임 이름 유효성 검사
-        if (!isValidGameName(gameRoom.getGameName())) {
-            throw new BusinessLogicException(ExceptionCode.GAME_NOT_FOUND);
-        }
 
         // ID 카운터 초기화 및 증가
         Long gameRoomId = redisGameRoomTemplate.opsForValue().increment("gameRoomIdCounter");
@@ -113,14 +109,6 @@ public class GameRoomService {
         // Redis에 게임룸 저장 (JSON 문자열)
         redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoomId, jsonGameRoom);
 
-        // (추가) 게임 선택 및 서비스 호출
-        GameService gameService = gameServiceMap.get(gameRoom.getGameName());
-        if(gameService == null) {
-            throw new BusinessLogicException(ExceptionCode.GAME_NOT_FOUND);
-        } else {
-            gameService.initializeGameRoom(gameRoom);
-        }
-
         // 게임룸 히스토리 생성 및 DB 저장
         GameRoomHistory gameRoomHistory = new GameRoomHistory();
         gameRoomHistory.setCurrentPopulation(gameRoom.getCurrentPopulation());
@@ -131,7 +119,7 @@ public class GameRoomService {
         System.out.println("Game room created with ID: " + gameRoomId);
         Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
         // GameRoomResponseDto 반환
-        return new GameRoomResponseDto(gameRoomId, gameRoom.getGameName(),
+        return new GameRoomResponseDto(gameRoomId, gameRoom.getGameName(),gameRoom.getCount(),
                 gameRoom.getGameRoomName(),
                 gameRoom.getCurrentPopulation(),
                 gameRoom.getGameRoomStatus(),
@@ -192,6 +180,7 @@ public class GameRoomService {
         Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
         return new GameRoomResponseDto(gameRoomId,
                 gameRoom.getGameName(),
+                gameRoom.getCount(),
                 gameRoom.getGameRoomName(),
                 gameRoom.getCurrentPopulation(),
                 gameRoom.getGameRoomStatus(),
@@ -236,6 +225,7 @@ public class GameRoomService {
 
             return new GameRoomResponseDto(gameRoomId,
                     gameRoom.getGameName(),
+                    gameRoom.getCount(),
                     gameRoom.getGameRoomName(),
                     gameRoom.getCurrentPopulation(),
                     gameRoom.getGameRoomStatus(),
@@ -319,6 +309,7 @@ public class GameRoomService {
         GameRoomResponseDto gameRoomResponseDto = new GameRoomResponseDto(
                 gameRoom.getGameRoomId(),
                 gameRoom.getGameName(),
+                gameRoom.getCount(),
                 gameRoom.getGameRoomName(),
                 gameRoom.getCurrentPopulation(),
                 gameRoom.getGameRoomStatus(),
@@ -355,6 +346,7 @@ public class GameRoomService {
             Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
             GameRoomResponseDto gameRoomResponseDto = new GameRoomResponseDto(gameRoom.getGameRoomId(),
                     gameRoom.getGameName(),
+                    gameRoom.getCount(),
                     gameRoom.getGameRoomName(),
                     gameRoom.getCurrentPopulation(),
                     gameRoom.getGameRoomStatus(),
