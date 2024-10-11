@@ -67,6 +67,9 @@ public class CatchmindService extends CatchmindGameService {
 
     @Override
     public void startCatchmind(GameRoom gameRoom, int count) {
+
+        initializeGameRoom(gameRoom);
+
         List<Member> members = gameRoomMembers.get(gameRoom);
 
         if (members.size() < 3) {
