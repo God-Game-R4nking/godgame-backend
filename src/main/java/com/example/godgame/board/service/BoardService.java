@@ -143,7 +143,7 @@ public class BoardService {
 
     public void verifiedMemberByBoardId(long boardId, Authentication authentication) {
         Board findBoard = findAuthenticateBoard(boardId, authentication);
-        String findBoardMemberId = String.valueOf(findBoard.getMember().getMemberId());
+        String findBoardMemberId = String.valueOf(findBoard.getMember().getId());
         String memberId = (String) authentication.getPrincipal();
         if(!findBoardMemberId.equals(memberId)) {
             throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_ALLOWED);
