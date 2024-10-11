@@ -42,6 +42,7 @@ public class CommentDto {
 
         private long commentId;
         private long boardId;
+        private long memberId;
         private String commentContent;
         private String nickName;
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

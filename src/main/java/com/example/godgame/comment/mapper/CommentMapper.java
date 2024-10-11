@@ -52,9 +52,10 @@ public interface CommentMapper {
         modifiedAt = comment.getModifiedAt();
 
         long boardId = comment.getBoard().getBoardId();
+        long memberId = comment.getMember().getMemberId();
         String nickName = comment.getMember().getNickName();
 
-        CommentDto.Response response = new CommentDto.Response(commentId, boardId, commentContent, nickName, createdAt, modifiedAt);
+        CommentDto.Response response = new CommentDto.Response(commentId, boardId, memberId, commentContent, nickName, createdAt, modifiedAt);
 
         return response;
     }

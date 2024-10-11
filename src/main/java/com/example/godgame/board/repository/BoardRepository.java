@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    @Query("SELECT c FROM Comment c WHERE c.board.id = :boardId AND c.commentStatus = :commentStatus")
-    Page<Comment> findByBoardId(long boardId, Comment.CommentStatus commentStatus, Pageable pageable);
+    Page<Board> findByTitleContainingAndBoardStatusNot(String title, Board.BoardStatus commentStatus, Pageable pageable);
+    Page<Board> findByContentContainingAndBoardStatusNot(String content, Board.BoardStatus commentStatus, Pageable pageable);
+    Page<Board> findAllByBoardStatusNot(Board.BoardStatus commentStatus, Pageable pageable);
 }

@@ -55,6 +55,14 @@ public class Board {
     @JsonManagedReference
     private List<View> views = new ArrayList<>();
 
+    public int getCommentCount() {
+        int result = 0;
+        for (Comment comment : comments) {
+            if (comment.getCommentStatus() == Comment.CommentStatus.COMMENT_REGISTERED) result++;
+        }
+        return result;
+    }
+
     public enum BoardStatus {
         BOARD_REGISTERED("등록 게시물"),
         BOARD_DELETED("삭제 게시물");
