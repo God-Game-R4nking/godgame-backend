@@ -23,6 +23,7 @@ public class GameRoom {
     private String publicStatus = "public";
     private List<Long> memberIds;
     private String gameName;
+    private String roomManagerName;
 
     // 멤버 추가 메서드
     public boolean addMember(Long memberId) {

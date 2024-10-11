@@ -3,6 +3,8 @@ package com.example.godgame.game.service;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.member.entity.Member;
 
+import java.util.Map;
+
 public class MusicGameService implements GameService{
 
     void startGame(GameRoom gameRoom, int count, String era) {
@@ -14,9 +16,8 @@ public class MusicGameService implements GameService{
 
     }
 
-    @Override
-    public void endGame(GameRoom gameRoom) {
-
+    public boolean endGame(GameRoom gameRoom, Map<Member, Integer> scores) {
+        return true;
     }
 
     @Override

@@ -5,8 +5,9 @@ import com.example.godgame.catchmind.repository.CatchmindRepository;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.exception.ExceptionCode;
 import com.example.godgame.game.service.CatchmindGameService;
-import com.example.godgame.game.service.GameService;
 import com.example.godgame.gameroom.GameRoom;
+import com.example.godgame.history.repository.GameHistoryRepository;
+import com.example.godgame.history.service.GameHistoryService;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.repository.MemberRepository;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -28,6 +29,8 @@ public class CatchmindService extends CatchmindGameService {
     private final CatchmindRepository catchmindRepository;
     private final RedisTemplate<String, GameRoom> redisTemplate;
     private final MemberRepository memberRepository;
+    private final GameHistoryService gameHistoryService;
+    private final GameHistoryRepository gameHistoryRepository;
 
     // GameRoom별 상태를 관리하는 맵
     private final Map<GameRoom, List<Member>> gameRoomMembers = new HashMap<>();
@@ -39,10 +42,12 @@ public class CatchmindService extends CatchmindGameService {
     private final Map<GameRoom, ScheduledExecutorService> schedulers = new HashMap<>();
     private boolean isGameRunning;
 
-    public CatchmindService(CatchmindRepository catchmindRepository, RedisTemplate<String, GameRoom> redisTemplate, MemberRepository memberRepository) {
+    public CatchmindService(CatchmindRepository catchmindRepository, RedisTemplate<String, GameRoom> redisTemplate, MemberRepository memberRepository, GameHistoryService gameHistoryService, GameHistoryRepository gameHistoryRepository) {
         this.catchmindRepository = catchmindRepository;
         this.redisTemplate = redisTemplate;
         this.memberRepository = memberRepository;
+        this.gameHistoryService = gameHistoryService;
+        this.gameHistoryRepository = gameHistoryRepository;
     }
 
     @Override
@@ -61,7 +66,7 @@ public class CatchmindService extends CatchmindGameService {
     }
 
     @Override
-    public void startGame(GameRoom gameRoom, int count) {
+    public void startCatchmind(GameRoom gameRoom, int count) {
         List<Member> members = gameRoomMembers.get(gameRoom);
 
         if (members.size() < 3) {
@@ -76,45 +81,30 @@ public class CatchmindService extends CatchmindGameService {
             throw new BusinessLogicException(ExceptionCode.QUESTION_NOT_AVAILABLE);
         }
 
+        Map<Member, Integer> scores = gameRoomScores.get(gameRoom);
         currentAnswers.put(gameRoom, questions.get(0).getWord());
         currentQuestionIndexes.put(gameRoom, 0);
-
-        startTimer(gameRoom);
 
         for (Member member : members) {
             gameRoomScores.get(gameRoom).put(member, 0); // 초기 점수 설정
         }
-
+        startTimer(gameRoom, scores);
     }
 
     @Override
-    public void endGame(GameRoom gameRoom) {
+    public boolean endGame(GameRoom gameRoom, Map<Member, Integer> scores) {
         isGameRunning = false;
         if (schedulers.containsKey(gameRoom) && schedulers.get(gameRoom) != null) {
             schedulers.get(gameRoom).shutdown();
+
+            gameRoomScores.put(gameRoom, scores);
+
+            return true;
         }
-        // 게임방 상태 초기화
-        gameRoomMembers.remove(gameRoom);
-        currentDrawers.remove(gameRoom);
-        currentAnswers.remove(gameRoom);
-        currentQuestionIndexes.remove(gameRoom);
-        gameRoomScores.remove(gameRoom);
-        schedulers.remove(gameRoom);
-
-        redisTemplate.delete("gameroom:" + gameRoom.getGameRoomId());
-    }
-
-    @Override
-    public boolean guessAnswer(Member member, String guess) {
         return false;
     }
 
-    @Override
-    public String getCurrentAnswer() {
-        return "";
-    }
-
-    private void startTimer(GameRoom gameRoom) {
+    private void startTimer(GameRoom gameRoom, Map<Member, Integer> scores) {
         gameRoomRoundTimes.put(gameRoom, 60);
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         schedulers.put(gameRoom, scheduler);
@@ -125,13 +115,13 @@ public class CatchmindService extends CatchmindGameService {
                 gameRoomRoundTimes.put(gameRoom, time);
 
                 if (time <= 0) {
-                    endRound(gameRoom);
+                    endRound(gameRoom, scores);
                 }
             }
         }, 0, 1, TimeUnit.SECONDS);
     }
 
-    private void endRound(GameRoom gameRoom) {
+    private void endRound(GameRoom gameRoom, Map<Member, Integer> scores) {
         schedulers.get(gameRoom).schedule(() -> {
             int currentIndex = currentQuestionIndexes.get(gameRoom) + 1;
             currentQuestionIndexes.put(gameRoom, currentIndex);
@@ -144,9 +134,12 @@ public class CatchmindService extends CatchmindGameService {
                 List<Member> members = gameRoomMembers.get(gameRoom);
                 currentDrawers.put(gameRoom, members.get(currentIndex % members.size()));
             } else {
-                endGame(gameRoom); // 모든 라운드 종료
+                if(!endGame(gameRoom, scores)) {
+                    throw new BusinessLogicException(ExceptionCode.GAME_END_ERROR);
+                }
             }
         }, 5, TimeUnit.SECONDS);
+        startTimer(gameRoom, scores);
     }
 
     @Override
@@ -156,7 +149,7 @@ public class CatchmindService extends CatchmindGameService {
             if (currentAnswer != null && currentAnswer.equalsIgnoreCase(guess)) {
                 Map<Member, Integer> scores = gameRoomScores.get(gameRoom);
                 scores.put(member, scores.get(member) + 1); // 점수 추가
-                endRound(gameRoom);
+                endRound(gameRoom, scores);
                 return true;
             }
         }
@@ -171,6 +164,15 @@ public class CatchmindService extends CatchmindGameService {
         return gameRoom;
     }
 
+    @Override
+    public boolean guessAnswer(Member member, String guess) {
+        return false;
+    }
+
+    @Override
+    public String getCurrentAnswer() {
+        return "";
+    }
 
     @Override
     public String getCurrentAnswer(GameRoom gameRoom) {

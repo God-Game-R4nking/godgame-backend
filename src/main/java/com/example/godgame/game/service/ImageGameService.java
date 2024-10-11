@@ -3,15 +3,16 @@ package com.example.godgame.game.service;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.member.entity.Member;
 
+import java.util.Map;
+
 public class ImageGameService implements GameService{
     @Override
     public void initializeGameRoom(GameRoom gameRoom) {
 
     }
 
-    @Override
-    public void endGame(GameRoom gameRoom) {
-
+    public boolean endGame(GameRoom gameRoom, Map<Member, Integer> scores) {
+        return false;
     }
 
     @Override

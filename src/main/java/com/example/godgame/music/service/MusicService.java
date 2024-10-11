@@ -88,7 +88,7 @@ public class MusicService extends MusicGameService {
                 .get(currentMusicIndex.get(gameRoom)));
     }
 
-    private void endRound(GameRoom gameRoom) {
+    private void endRound(GameRoom gameRoom, Map<Member, Integer> scores) {
         scheduler.get(gameRoom).schedule(() -> {
             int currentIndex = currentMusicIndex.get(gameRoom) + 1;
             currentMusicIndex.put(gameRoom, currentIndex);
@@ -96,7 +96,7 @@ public class MusicService extends MusicGameService {
             if (currentIndex < gameRoomCounts.get(gameRoom)) {
                 currentAnswers.put(gameRoom, getCurrentMusic(gameRoom).getCurrentTitle());
             } else {
-                endGame(gameRoom); // 모든 라운드 종료
+                endGame(gameRoom, scores); // 모든 라운드 종료
             }
         }, 5, TimeUnit.SECONDS);
     }
@@ -138,8 +138,8 @@ public class MusicService extends MusicGameService {
 
 
     @Override
-    public void endGame(GameRoom gameRoom) {
-
+    public boolean endGame(GameRoom gameRoom, Map<Member, Integer> scores) {
+        return true;
     }
 
     @Override
