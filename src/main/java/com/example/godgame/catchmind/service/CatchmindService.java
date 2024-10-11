@@ -10,6 +10,8 @@ import com.example.godgame.history.repository.GameHistoryRepository;
 import com.example.godgame.history.service.GameHistoryService;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.repository.MemberRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.example.godgame.member.entity.Member.MemberGameStatus.MEMBER_PLAY;
+import static com.example.godgame.member.entity.Member.MemberGameStatus.MEMBER_WAIT;
+
 @Service("Catchmind")
 @Transactional
 @EnableScheduling
@@ -27,10 +32,8 @@ public class CatchmindService extends CatchmindGameService {
 
 
     private final CatchmindRepository catchmindRepository;
-    private final RedisTemplate<String, GameRoom> redisTemplate;
+    private final RedisTemplate<String, GameRoom> redisGameRoomTemplate;
     private final MemberRepository memberRepository;
-    private final GameHistoryService gameHistoryService;
-    private final GameHistoryRepository gameHistoryRepository;
 
     // GameRoom별 상태를 관리하는 맵
     private final Map<GameRoom, List<Member>> gameRoomMembers = new HashMap<>();
@@ -42,19 +45,30 @@ public class CatchmindService extends CatchmindGameService {
     private final Map<GameRoom, ScheduledExecutorService> schedulers = new HashMap<>();
     private boolean isGameRunning;
 
-    public CatchmindService(CatchmindRepository catchmindRepository, RedisTemplate<String, GameRoom> redisTemplate, MemberRepository memberRepository, GameHistoryService gameHistoryService, GameHistoryRepository gameHistoryRepository) {
+    public CatchmindService(CatchmindRepository catchmindRepository, RedisTemplate<String, GameRoom> redisGameRoomTemplate, MemberRepository memberRepository) {
         this.catchmindRepository = catchmindRepository;
-        this.redisTemplate = redisTemplate;
+        this.redisGameRoomTemplate = redisGameRoomTemplate;
         this.memberRepository = memberRepository;
-        this.gameHistoryService = gameHistoryService;
-        this.gameHistoryRepository = gameHistoryRepository;
     }
 
     @Override
     public void initializeGameRoom(GameRoom gameRoom) {
-        gameRoom.setGameRoomStatus("ACTIVE");
 
-        gameRoomMembers.put(gameRoom, new ArrayList<>());
+        gameRoom.setGameRoomStatus("playing");
+
+        gameRoomMembers.put(gameRoom, null);
+
+        String gameRoomKey = "gameroom:" + gameRoom.getGameRoomId();
+        redisGameRoomTemplate.opsForValue().set(gameRoomKey, gameRoom);
+        GameRoom existingGameRoom = redisGameRoomTemplate.opsForValue().get(gameRoomKey);
+
+        if (existingGameRoom != null) {
+            List<Long> memberIds = existingGameRoom.getMemberIds(); // GameRoom 객체에 멤버 리스트가 있어야 합니다.
+            gameRoomMembers.put(gameRoom, memberRepository.findAllById(memberIds)); // 멤버 리스트를 맵에 추가
+        } else {
+            throw new BusinessLogicException(ExceptionCode.GAME_ROOM_NOT_FOUND);
+        }
+
         currentDrawers.put(gameRoom, null);
         currentAnswers.put(gameRoom, null);
         currentQuestionIndexes.put(gameRoom, 0);
@@ -62,7 +76,7 @@ public class CatchmindService extends CatchmindGameService {
         gameRoomRoundTimes.put(gameRoom, 60);
         isGameRunning = false;
 
-        redisTemplate.opsForValue().set("gameroom:" + gameRoom.getGameRoomId(), gameRoom);
+        redisGameRoomTemplate.opsForValue().set("gameroom:" + gameRoom.getGameRoomId(), gameRoom);
     }
 
     @Override
@@ -71,8 +85,11 @@ public class CatchmindService extends CatchmindGameService {
         initializeGameRoom(gameRoom);
 
         List<Member> members = gameRoomMembers.get(gameRoom);
+        for (int i = 0; i < members.size(); i++) {
+            members.get(i).setMemberGameStatus(MEMBER_PLAY);
+        }
 
-        if (members.size() < 3) {
+        if (members.size() < 2) {
             throw new BusinessLogicException(ExceptionCode.NEED_MORE_MEMBER);
         }
 
@@ -86,7 +103,6 @@ public class CatchmindService extends CatchmindGameService {
 
         Map<Member, Integer> scores = gameRoomScores.get(gameRoom);
         currentAnswers.put(gameRoom, questions.get(0).getWord());
-        currentQuestionIndexes.put(gameRoom, 0);
 
         for (Member member : members) {
             gameRoomScores.get(gameRoom).put(member, 0); // 초기 점수 설정
@@ -94,28 +110,17 @@ public class CatchmindService extends CatchmindGameService {
         startTimer(gameRoom, scores);
     }
 
-    @Override
-    public boolean endGame(GameRoom gameRoom, Map<Member, Integer> scores) {
-        isGameRunning = false;
-        if (schedulers.containsKey(gameRoom) && schedulers.get(gameRoom) != null) {
-            schedulers.get(gameRoom).shutdown();
-
-            gameRoomScores.put(gameRoom, scores);
-
-            return true;
-        }
-        return false;
-    }
-
-    private void startTimer(GameRoom gameRoom, Map<Member, Integer> scores) {
+    public void startTimer(GameRoom gameRoom, Map<Member, Integer> scores) {
         gameRoomRoundTimes.put(gameRoom, 60);
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         schedulers.put(gameRoom, scheduler);
 
         scheduler.scheduleAtFixedRate(() -> {
-            if (isGameRunning) {
-                int time = gameRoomRoundTimes.get(gameRoom) - 1;
+            int time = gameRoomRoundTimes.get(gameRoom);
+            if (time > 0) {
+                time--;
                 gameRoomRoundTimes.put(gameRoom, time);
+                System.out.println("Remaining time: " + time);
 
                 if (time <= 0) {
                     endRound(gameRoom, scores);
@@ -124,16 +129,27 @@ public class CatchmindService extends CatchmindGameService {
         }, 0, 1, TimeUnit.SECONDS);
     }
 
-    private void endRound(GameRoom gameRoom, Map<Member, Integer> scores) {
+    @Override
+    public boolean guessAnswer(GameRoom gameRoom, Member member, String guess) {
+        if(guess.equals(getCurrentAnswer())) {
+            Map<Member, Integer> scores = gameRoomScores.get(gameRoom);
+            scores.put(member, scores.get(member) + 1);
+
+            return true;
+        }
+        return false;
+    }
+
+    public void endRound(GameRoom gameRoom, Map<Member, Integer> scores) {
         schedulers.get(gameRoom).schedule(() -> {
+            gameRoomRoundTimes.put(gameRoom, 30);
             int currentIndex = currentQuestionIndexes.get(gameRoom) + 1;
             currentQuestionIndexes.put(gameRoom, currentIndex);
 
-            List<Catchmind> questions = findRandomWord(currentIndex); // 질문 업데이트
+            List<Catchmind> questions = findRandomWord(currentIndex);
 
             if (currentIndex < questions.size()) {
                 currentAnswers.put(gameRoom, questions.get(currentIndex).getWord());
-                gameRoomRoundTimes.put(gameRoom, 60);
                 List<Member> members = gameRoomMembers.get(gameRoom);
                 currentDrawers.put(gameRoom, members.get(currentIndex % members.size()));
             } else {
@@ -146,35 +162,27 @@ public class CatchmindService extends CatchmindGameService {
     }
 
     @Override
-    public boolean guessAnswer(GameRoom gameRoom, Member member, String guess) {
-        if (isGameRunning) {
-            String currentAnswer = currentAnswers.get(gameRoom);
-            if (currentAnswer != null && currentAnswer.equalsIgnoreCase(guess)) {
-                Map<Member, Integer> scores = gameRoomScores.get(gameRoom);
-                scores.put(member, scores.get(member) + 1); // 점수 추가
-                endRound(gameRoom, scores);
-                return true;
-            }
+    public boolean endGame(GameRoom gameRoom, Map<Member, Integer> scores) {
+        isGameRunning = false;
+        if (schedulers.containsKey(gameRoom) && schedulers.get(gameRoom) != null) {
+            schedulers.get(gameRoom).shutdown();
         }
-        return false;
-    }
 
-    public GameRoom getGameRoomById(Long gameRoomId) {
-        GameRoom gameRoom = redisTemplate.opsForValue().get("gameroom:" + gameRoomId);
-        if (gameRoom == null) {
-            throw new BusinessLogicException(ExceptionCode.GAME_ROOM_NOT_FOUND);
+        gameRoom.setGameRoomStatus("wait");
+        gameRoomScores.put(gameRoom, scores);
+        List<Member> members = gameRoomMembers.get(gameRoom);
+        for (int i = 0; i < members.size(); i++) {
+            members.get(i).setMemberGameStatus(MEMBER_WAIT);
         }
-        return gameRoom;
+
+        String updatedJsonGameRoom = convertToFormattedJson(gameRoom);
+        redisGameRoomTemplate.opsForValue().set("gameroom:"+ updatedJsonGameRoom, gameRoom);
+
+        return true;
     }
 
-    @Override
-    public boolean guessAnswer(Member member, String guess) {
-        return false;
-    }
-
-    @Override
-    public String getCurrentAnswer() {
-        return "";
+    public Map<Member, Integer> getScores (GameRoom gameRoom) {
+        return gameRoomScores.get(gameRoom);
     }
 
     @Override
@@ -186,21 +194,39 @@ public class CatchmindService extends CatchmindGameService {
         return catchmindRepository.findRandomCatchminds(count);
     }
 
-    public List<Member> getMembers(GameRoom gameRoom) {
-        return gameRoomMembers.get(gameRoom);
+    public List<Member> getMembersFromIds(List<Long> memberIds) {
+
+        if (memberIds == null || memberIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Member> members = memberRepository.findAllById(memberIds);
+        if (members.isEmpty()) {
+            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND);
+        }
+        return members;
     }
 
-    public int getScoreForMember(GameRoom gameRoom, Member member) {
-        return gameRoomScores.get(gameRoom).getOrDefault(member, 0);
+    public String convertToFormattedJson(GameRoom gameRoom) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            String jsonString = objectMapper.writeValueAsString(gameRoom);
+            System.out.println("Converted JSON: " + jsonString); // JSON 출력
+            return jsonString;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to convert GameRoom to JSON", e);
+        }
     }
 
-    public int getRoundTime(GameRoom gameRoom) {
-        return gameRoomRoundTimes.get(gameRoom);
-    }
+    private GameRoom convertFromJson(String json) {
+        if (json == null) {
+            throw new IllegalArgumentException("Input JSON string cannot be null");
+        }
 
-    public Member getMemberById(Long memberId) {
-        Optional<Member> optionalMember = memberRepository.findById(memberId);
-
-        return optionalMember.orElseThrow(()-> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(json, GameRoom.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error while converting JSON to GameRoom", e);
+        }
     }
 }

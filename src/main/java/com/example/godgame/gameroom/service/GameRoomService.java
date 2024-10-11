@@ -93,9 +93,10 @@ public class GameRoomService {
             }
         }
 
+        Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
         // 게임룸 객체에 ID 설정
         gameRoom.setGameRoomId(gameRoomId);
-
+        gameRoom.setRoomManagerName(findMember.getNickName());
         // JSON으로 변환
         String jsonGameRoom = convertToFormattedJson(gameRoom);
         System.out.println("Saving GameRoom to Redis: " + jsonGameRoom);
@@ -114,19 +115,27 @@ public class GameRoomService {
         gameRoomHistoryRepository.save(gameRoomHistory);
 
         System.out.println("Game room created with ID: " + gameRoomId);
-        Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
+
         // GameRoomResponseDto 반환
-        return new GameRoomResponseDto(gameRoomId, gameRoom.getGameName(),gameRoom.getCount(),
+        GameRoomResponseDto gameRoomResponseDto = new GameRoomResponseDto(gameRoomId, gameRoom.getGameName(),gameRoom.getCount(),
                 gameRoom.getGameRoomName(),
                 gameRoom.getCurrentPopulation(),
                 gameRoom.getGameRoomStatus(),
                 gameRoom.getMaxPopulation(),
                 gameRoom.getMemberIds(),
                 findMember.getNickName());
+
+
+
+        return gameRoomResponseDto;
     }
 
     public void startGame(long gameRoomId, int count, Authentication authentication) {
+
         String gameRoomJson = redisGameRoomTemplate.opsForValue().get("gameRoom:" + gameRoomId);
+        if (gameRoomJson == null) {
+            throw new BusinessLogicException(ExceptionCode.GAME_ROOM_NOT_FOUND);
+        }
         GameRoom gameRoom = convertFromJson(gameRoomJson); // JSON에서 역직렬화
 
         if (authentication == null || !authentication.isAuthenticated()) {

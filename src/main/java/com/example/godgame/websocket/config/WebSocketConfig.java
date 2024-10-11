@@ -1,5 +1,6 @@
 package com.example.godgame.websocket.config;
 
+import com.example.godgame.catchmind.service.CatchmindService;
 import com.example.godgame.gameroom.service.GameRoomService;
 import com.example.godgame.member.service.MemberService;
 import com.example.godgame.websocket.webchat.ChattingMessage;
@@ -29,13 +30,15 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private final RedisTemplate<String, ChattingMessage> redisTemplate;
     private final MemberService memberService;
     private final GameRoomService gameRoomService;
+    private final CatchmindService catchmindService;
     private final ObjectMapper objectMapper;
 
-    public WebSocketConfig(RedisConnectionFactory redisConnectionFactory, RedisTemplate<String, ChattingMessage> redisTemplate, MemberService memberService, GameRoomService gameRoomService, ObjectMapper objectMapper) {
+    public WebSocketConfig(RedisConnectionFactory redisConnectionFactory, RedisTemplate<String, ChattingMessage> redisTemplate, MemberService memberService, GameRoomService gameRoomService, CatchmindService catchmindService, ObjectMapper objectMapper) {
         this.redisConnectionFactory = redisConnectionFactory;
         this.redisTemplate = redisTemplate;
         this.memberService = memberService;
         this.gameRoomService = gameRoomService;
+        this.catchmindService = catchmindService;
         this.objectMapper = objectMapper;
     }
 
@@ -48,7 +51,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Bean
     public MyHandler myHandler() {
-        return new MyHandler(objectMapper, redisTemplate, redisMessageListener(), memberService, gameRoomService);
+        return new MyHandler(objectMapper, redisTemplate, redisMessageListener(), memberService, gameRoomService, catchmindService);
     }
 
     @Bean

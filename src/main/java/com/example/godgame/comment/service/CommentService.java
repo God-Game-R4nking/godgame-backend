@@ -6,6 +6,7 @@ import com.example.godgame.comment.entity.Comment;
 import com.example.godgame.comment.repository.CommentRepository;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.exception.ExceptionCode;
+import com.example.godgame.member.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,10 @@ public class CommentService {
     public Comment createComment(Comment comment, Authentication authentication) {
         Optional<Board> optionalBoard = boardRepository.findById(comment.getBoard().getBoardId());
         Board findBoard = optionalBoard.orElseThrow(()-> new BusinessLogicException(ExceptionCode.BOARD_NOT_FOUND));
+        String authenticationName = authentication.getName();
+        if(!comment.getMember().getId().equals(authenticationName)) {
+            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND);
+        }
         findBoard.getComments().add(comment);
         return commentRepository.save(comment);
     }

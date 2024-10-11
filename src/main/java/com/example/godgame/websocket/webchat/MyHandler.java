@@ -1,10 +1,12 @@
 package com.example.godgame.websocket.webchat;
 
+import com.example.godgame.catchmind.service.CatchmindService;
 import com.example.godgame.game.service.GameService;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.service.GameRoomService;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.service.MemberService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,16 +30,18 @@ public class MyHandler extends TextWebSocketHandler {
     private final RedisMessageListenerContainer redisMessageListener;
     private final MemberService memberService;
     private final GameRoomService gameRoomService;
+    private final CatchmindService catchmindService;
     private final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
     public MyHandler(ObjectMapper objectMapper, RedisTemplate<String, ChattingMessage> redisTemplate,
                      RedisMessageListenerContainer redisMessageListener, MemberService memberService,
-                     GameRoomService gameRoomService) {
+                     GameRoomService gameRoomService, CatchmindService catchmindService) {
         this.objectMapper = objectMapper;
         this.redisTemplate = redisTemplate;
         this.redisMessageListener = redisMessageListener;
         this.memberService = memberService;
         this.gameRoomService = gameRoomService;
+        this.catchmindService = catchmindService;
     }
 
     @Autowired
@@ -70,31 +74,22 @@ public class MyHandler extends TextWebSocketHandler {
             Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
             if (gameRoomId != null) {
                 GameRoom gameRoom = gameRoomService.getGameRoom("gameRoom:" + gameRoomId);
-                if (gameRoom != null && "게임중".equals(gameRoom.getGameRoomStatus())) {
-                    // 정답 제출 처리
-                    GameService gameService = gameRoomService.getGameService(gameRoom.getGameName());
+                ChattingMessage parseChattingMessage = objectMapper.readValue(message.getPayload(), ChattingMessage.class);
 
-                    if (gameService != null) {
-                        boolean isCorrect = gameService.guessAnswer(member, message.getPayload().replaceAll(" ", ""));
-                        if(isCorrect) {
-                            String correctMessage = member.getNickName() + "님이 정답을 맞혔습니다: " + message.getPayload();
-                            publishToGameRoom(gameRoomId, correctMessage);
-                        }
-                    }
-                } else {
-                    ChattingMessage parseChattingMessage = objectMapper.readValue(message.getPayload(), ChattingMessage.class);
-//                    ChattingMessage parseChattingMessage = objectMapper.treeToValue(jsonNode.get("content"), ChattingMessage.class);
-                    ChattingMessage chattingMessage = new ChattingMessage();
-                    chattingMessage.setChatId(redisTemplate.opsForValue().increment("chatIdCounter"));
-                    chattingMessage.setMemberId(parseChattingMessage.getMemberId());
-                    chattingMessage.setNickName(parseChattingMessage.getNickName());
-                    chattingMessage.setGameRoomId(parseChattingMessage.getGameRoomId());
-                    chattingMessage.setContent(parseChattingMessage.getContent());
-                    chattingMessage.setCreatedAt(LocalDateTime.now());
-                    chattingMessage.setType(parseChattingMessage.getType());
-                    System.out.println("sajdddhjksadjkkkkkkkkkkkkkkkkkkkkkkkkk" + chattingMessage.getNickName());
-                    publishToGameRoom(gameRoomId, chattingMessage.getNickName() + ":" + chattingMessage.getContent());
+                if (gameRoom != null && gameRoom.getGameRoomStatus().equals("게임중")) {
+                    submitAnswer(gameRoom, session, message);
                 }
+
+                ChattingMessage chattingMessage = new ChattingMessage();
+                chattingMessage.setChatId(redisTemplate.opsForValue().increment("chatIdCounter"));
+                chattingMessage.setMemberId(parseChattingMessage.getMemberId());
+                chattingMessage.setNickName(parseChattingMessage.getNickName());
+                chattingMessage.setGameRoomId(parseChattingMessage.getGameRoomId());
+                chattingMessage.setContent(parseChattingMessage.getContent());
+                chattingMessage.setCreatedAt(LocalDateTime.now());
+                chattingMessage.setType(parseChattingMessage.getType());
+                System.out.println("sajdddhjksadjkkkkkkkkkkkkkkkkkkkkkkkkk" + chattingMessage.getNickName());
+                publishToGameRoom(gameRoomId, message.getPayload());
             }
         } else {
             session.sendMessage(new TextMessage("사용자 정보가 없습니다. 다시 접속하세요."));
@@ -167,5 +162,16 @@ public class MyHandler extends TextWebSocketHandler {
             }
         }
         return null; // 해당하는 게임룸이 없을 경우 null 반환
+    }
+
+    private void submitAnswer(GameRoom gameRoom, WebSocketSession session, TextMessage message) throws JsonProcessingException {
+
+        Member member = (Member) session.getAttributes().get("member");
+        Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
+        if(catchmindService.guessAnswer(gameRoom, member, message.getPayload())) {
+            String correctMessage = member.getNickName() + "님이 정답을 맞혔습니다: " + message.getPayload();
+            publishToGameRoom(gameRoomId, correctMessage);
+            catchmindService.endRound(gameRoom, catchmindService.getScores(gameRoom));
+        }
     }
 }
