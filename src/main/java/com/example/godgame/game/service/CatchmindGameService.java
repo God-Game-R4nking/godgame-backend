@@ -3,6 +3,8 @@ package com.example.godgame.game.service;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.member.entity.Member;
 
+import java.util.Map;
+
 public class CatchmindGameService implements GameService {
 
     @Override
@@ -10,13 +12,12 @@ public class CatchmindGameService implements GameService {
 
     }
 
-    public void startGame(GameRoom gameRoom, int count) {
+    public void startCatchmind(GameRoom gameRoom, int count) {
 
     }
 
-    @Override
-    public void endGame(GameRoom gameRoom) {
-
+    public boolean endGame(GameRoom gameRoom, Map<Member, Integer> scores) {
+        return true;
     }
 
     @Override

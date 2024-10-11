@@ -4,6 +4,7 @@ import lombok.Getter;
 
 public enum ExceptionCode {
     BOARD_NOT_FOUND(404, "Board not found"),
+    UNAUTHORIZED(404, "Unauthorized"),
     QUESTION_EXISTS(409, "Question exists"),
     QUESTION_NOT_AVAILABLE(409, "Question not available"),
     QUESTION_DELETE_NOT_PERMISSION(404, "Question delete not permission"),
@@ -21,6 +22,8 @@ public enum ExceptionCode {
     GAME_NOT_FOUND(404, "Game not found"),
     GAME_ROOM_NOT_FOUND(404, "Game room not found"),
     GAME_NOT_PROCEED(404, "Game not proceed"),
+    GAME_END_ERROR(404, "Game end error"),
+    ONLY_HOST_CAN_START(404, "Only host can start"),
     MUSIC_NOT_FOUND(404, "Music not found"),
     NEED_MORE_MEMBER(404,"Need more member"),
     BAN_EXISTS(409,"Ban exists"),

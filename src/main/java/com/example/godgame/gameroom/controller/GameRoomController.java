@@ -10,6 +10,7 @@ import com.example.godgame.gameroom.service.GameRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,9 +51,21 @@ public class GameRoomController {
         }
     }
 
+    @PostMapping("{game-room-id}/start")
+    public ResponseEntity startGame(@PathVariable("game-room-id") long gameRoomId, Authentication authentication) {
+        try {
+            int getCount = gameRoomService.getGameRoom(gameRoomId).getCount();
+            gameRoomService.startGame(gameRoomId, getCount, authentication);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (BusinessLogicException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
 
     @PostMapping("/{game-room-id}/leave/{member-id}")
-    public ResponseEntity<GameRoomResponseDto> leaveGame(@PathVariable("game-room-id") long gameRoomId, @PathVariable("member-id") Long memberId) {
+    public ResponseEntity<GameRoomResponseDto> leaveGame(@PathVariable("game-room-id") long gameRoomId,
+                                                         @PathVariable("member-id") Long memberId) {
         try {
             GameRoomResponseDto response = gameRoomService.leaveGame(gameRoomId, memberId);
             return ResponseEntity.ok(response);
@@ -75,7 +88,16 @@ public class GameRoomController {
         return new ResponseEntity(new SingleResponseDto<>(response), HttpStatus.OK);
     }
 
-
+    @PostMapping("/{game-room-id}/end")
+    public ResponseEntity endGame(@PathVariable("game-room-id") long gameRoomId) {
+        try {
+            GameRoomResponseDto gameRoomName = gameRoomService.getGameRoom(gameRoomId);
+            gameRoomService.endGame(gameRoomName.getGameRoomName());
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (BusinessLogicException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null); // 필요한 경우 메시지를 추가할 수 있어
+        }
+    }
 }
 
 

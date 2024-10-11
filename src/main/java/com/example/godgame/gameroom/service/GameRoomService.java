@@ -1,5 +1,6 @@
 package com.example.godgame.gameroom.service;
 
+import com.example.godgame.catchmind.service.CatchmindService;
 import com.example.godgame.exception.BusinessLogicException;
 import com.example.godgame.exception.ExceptionCode;
 import com.example.godgame.chat.service.ChatService;
@@ -19,17 +20,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.annotation.PostConstruct;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.prefs.BackingStoreException;
 
 @Service
 public class GameRoomService {
@@ -58,6 +52,9 @@ public class GameRoomService {
   
     @Autowired
     private MemberService memberService;
+
+    @Autowired
+    private CatchmindService catchmindService;
 
     @Autowired
     public GameRoomService(List<GameService> gameServices) {
@@ -128,11 +125,30 @@ public class GameRoomService {
                 findMember.getNickName());
     }
 
-    public void startGame(long gameRoomId) {
+    public void startGame(long gameRoomId, int count, Authentication authentication) {
         String gameRoomJson = redisGameRoomTemplate.opsForValue().get("gameRoom:" + gameRoomId);
         GameRoom gameRoom = convertFromJson(gameRoomJson); // JSON에서 역직렬화
-        if (gameRoom != null && "대기중".equals(gameRoom.getGameRoomStatus())) {
-            gameRoom.setGameRoomStatus("게임중");
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BusinessLogicException(ExceptionCode.UNAUTHORIZED);
+        }
+        String managerId = authentication.getName();
+        Member member = memberService.findMember(managerId);
+        String managerName = member.getNickName();
+        String roomManagerName = gameRoom.getRoomManagerName();
+
+        if (!managerName.equals(roomManagerName)) {
+            throw new BusinessLogicException(ExceptionCode.ONLY_HOST_CAN_START);
+        }
+
+        if (gameRoom != null && gameRoom.getGameRoomStatus().equals("wait")) {
+            gameRoom.setGameRoomStatus("playing");
+
+            if(gameRoom.getGameName().equals("Catchmind")) {
+                catchmindService.startCatchmind(gameRoom, count);
+            } else {
+                throw new BusinessLogicException(ExceptionCode.GAME_NOT_FOUND);
+            }
 
             redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoomId, convertToFormattedJson(gameRoom)); // JSON으로 업데이트
 
@@ -140,6 +156,10 @@ public class GameRoomService {
             gameRoomHistory.setCurrentPopulation(gameRoom.getCurrentPopulation());
             gameRoomHistory.setCreatedAt(LocalDateTime.now());
             gameRoomHistory.setModifiedAt(LocalDateTime.now());
+
+            GameHistory gameHistory = new GameHistory();
+            gameHistory.setGameName(gameRoom.getGameName());
+            gameHistory.setMemberId(gameRoom.getMemberIds().get(0));
 
             try {
                 gameRoomHistoryRepository.save(gameRoomHistory); // DB에 저장
@@ -155,7 +175,7 @@ public class GameRoomService {
         GameRoom gameRoom = convertFromJson(gameRoomJson); // JSON에서 역직렬화
 
         // 게임 방이 존재하지 않거나 게임이 시작된 경우
-        if (gameRoom == null || "게임중".equals(gameRoom.getGameRoomStatus())) {
+        if (gameRoom == null || "playing".equals(gameRoom.getGameRoomStatus())) {
             throw new BusinessLogicException(ExceptionCode.GAME_ROOM_JOIN_ERROR);
         }
 
@@ -188,8 +208,6 @@ public class GameRoomService {
                 gameRoom.getMemberIds(),
                 findMember.getNickName());
     }
-
-
 
     public GameRoomResponseDto leaveGame(long gameRoomId, Long memberId) {
         String gameRoomJson = redisGameRoomTemplate.opsForValue().get("gameRoom:" + gameRoomId);
@@ -259,14 +277,12 @@ public class GameRoomService {
         }
     }
 
-
-
-    public void endGame(String roomName, Map<Long, Integer> scores) {
+    public void endGame(String roomName) {
         String gameRoomJson = redisGameRoomTemplate.opsForValue().get(roomName);
         GameRoom gameRoom = convertFromJson(gameRoomJson);
 
-        if (gameRoom != null && "게임중".equals(gameRoom.getGameRoomStatus())) {
-            gameRoom.setGameRoomStatus("대기중");
+        if (gameRoom != null && "playing".equals(gameRoom.getGameRoomStatus())) {
+            gameRoom.setGameRoomStatus("wait");
             redisGameRoomTemplate.opsForValue().set(roomName, convertToFormattedJson(gameRoom)); // 상태 업데이트
 
             // 각 멤버의 게임 히스토리 저장
@@ -275,7 +291,7 @@ public class GameRoomService {
                     GameHistory gameHistory = new GameHistory();
                     gameHistory.setMemberId(memberId);
                     gameHistory.setGameName(gameRoom.getGameName());
-                    gameHistory.setScore(scores.getOrDefault(memberId, 0)); // 점수 가져오기, 없으면 0
+//                    gameHistory.setScore(scores.getOrDefault(memberId, 0)); // 점수 가져오기, 없으면 0
                     // createdAt, modifiedAt은 기본값으로 설정되므로 필요 없음
                     gameHistoryRepository.save(gameHistory);
                 }
