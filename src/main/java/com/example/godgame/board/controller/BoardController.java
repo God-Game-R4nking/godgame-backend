@@ -71,10 +71,12 @@ public class BoardController {
     }
 
     @GetMapping("/gets")
-    public ResponseEntity getBoards(@Positive @RequestParam int page,
-                                    @Positive @RequestParam int size){
+    public ResponseEntity getBoards(@RequestParam String title,
+                                    @RequestParam String content,
+                                    @Positive @RequestParam int page,
+                                    @Positive @RequestParam int size) {
 
-        Page<Board> pageBoards = boardService.findBoards(page-1, size);
+        Page<Board> pageBoards = boardService.findBoards(title, content, page - 1, size);
         List<Board> boards = pageBoards.getContent();
 
         return new ResponseEntity<>(

@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.example.godgame.board.entity.Board.BoardStatus.BOARD_DELETED;
+
 @Service
 @Transactional
 public class BoardService {
@@ -112,15 +114,20 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Board> findBoards(int page, int size) {
-        return boardRepository.findAll(PageRequest.of(page, size, Sort.by("boardId").descending()));
+    public Page<Board> findBoards(String title, String content, int page, int size) {
+        if (content.isBlank()) {
+            return boardRepository.findByTitleContainingAndBoardStatusNot(title, BOARD_DELETED, PageRequest.of(page, size, Sort.by("boardId").descending()));
+        } else if (title.isBlank()) {
+            return boardRepository.findByContentContainingAndBoardStatusNot(content, BOARD_DELETED, PageRequest.of(page, size, Sort.by("boardId").descending()));
+        }
+        return boardRepository.findAllByBoardStatusNot(BOARD_DELETED, PageRequest.of(page, size, Sort.by("boardId").descending()));
     }
 
     @Transactional
     public void deleteBoard(long boardId, Authentication authentication) {
         Board findBoard = findVerifiedBoard(boardId);
         verifiedMemberByBoardId(boardId, authentication);
-        findBoard.setBoardStatus(Board.BoardStatus.BOARD_DELETED);
+        findBoard.setBoardStatus(BOARD_DELETED);
         boardRepository.save(findBoard);
     }
 

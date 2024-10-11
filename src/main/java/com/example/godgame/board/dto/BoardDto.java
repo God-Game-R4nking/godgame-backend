@@ -55,8 +55,7 @@ public class BoardDto {
         private long memberId;
         private String nickName;
         private int viewCount;
-        private int currentPage;
-        private int totalPages;
+        private int commentCount;
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime createdAt;
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
