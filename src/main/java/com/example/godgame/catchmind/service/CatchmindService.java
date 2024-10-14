@@ -35,7 +35,7 @@ public class CatchmindService extends CatchmindGameService {
 
 
     private final CatchmindRepository catchmindRepository;
-    private final RedisTemplate<String, GameRoom> redisGameRoomTemplate;
+    private final RedisTemplate<String, GameRoom> redisTemplate;
     private final RedisTemplate<String, ChattingMessage> redisChattindMessageTemplate;
     private final MemberRepository memberRepository;
 
@@ -50,9 +50,9 @@ public class CatchmindService extends CatchmindGameService {
     private boolean isGameRunning;
     private Map<GameRoom, Boolean> isTimerRunning = new HashMap<>();
 
-    public CatchmindService(CatchmindRepository catchmindRepository, RedisTemplate<String, GameRoom> redisGameRoomTemplate, MemberRepository memberRepository, RedisTemplate<String, ChattingMessage> redisChattindMessageTemplate) {
+    public CatchmindService(CatchmindRepository catchmindRepository, RedisTemplate<String, GameRoom> redisTemplate, MemberRepository memberRepository, RedisTemplate<String, ChattingMessage> redisChattindMessageTemplate) {
         this.catchmindRepository = catchmindRepository;
-        this.redisGameRoomTemplate = redisGameRoomTemplate;
+        this.redisTemplate = redisTemplate;
         this.memberRepository = memberRepository;
         this.redisChattindMessageTemplate = redisChattindMessageTemplate;
     }
@@ -65,8 +65,8 @@ public class CatchmindService extends CatchmindGameService {
         gameRoomMembers.put(gameRoom, null);
 
         String gameRoomKey = "gameRoom:" + gameRoom.getGameRoomId();
-        redisGameRoomTemplate.opsForValue().set(gameRoomKey, gameRoom);
-        GameRoom existingGameRoom = redisGameRoomTemplate.opsForValue().get(gameRoomKey);
+        redisTemplate.opsForValue().set(gameRoomKey, gameRoom);
+        GameRoom existingGameRoom = redisTemplate.opsForValue().get(gameRoomKey);
 
         if (existingGameRoom != null) {
             List<Long> memberIds = existingGameRoom.getMemberIds(); // GameRoom 객체에 멤버 리스트가 있어야 합니다.
@@ -82,7 +82,7 @@ public class CatchmindService extends CatchmindGameService {
         gameRoomRoundTimes.put(gameRoom, 60);
         isGameRunning = false;
 
-        redisGameRoomTemplate.opsForValue().set("gameroom:" + gameRoom.getGameRoomId(), gameRoom);
+        redisTemplate.opsForValue().set("gameroom:" + gameRoom.getGameRoomId(), gameRoom);
     }
 
     @Override
@@ -110,40 +110,40 @@ public class CatchmindService extends CatchmindGameService {
         Map<Member, Integer> scores = gameRoomScores.get(gameRoom);
         currentAnswers.put(gameRoom, questions.get(0).getWord());
 
-        ChattingMessage chattingMessage = new ChattingMessage();
-        chattingMessage.setContent(currentDrawers.get(gameRoom).getNickName());
-        chattingMessage.setType("CURRENT_DRAWER");
-        chattingMessage.setMemberId(0);
-        chattingMessage.setNickName("관리자");
-        chattingMessage.setGameRoomId(gameRoom.getGameRoomId());
-        chattingMessage.setCreatedAt( LocalDateTime.now());
-        String jsonString = "";
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            jsonString = objectMapper.writeValueAsString(chattingMessage);
-
-            // jsonString을 사용하여 전송하세요
-            System.out.println(jsonString); // 결과 확인
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println("DRAWER jsonString : " + jsonString);
-        redisChattindMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getRoomManagerName(), jsonString);
-
-        chattingMessage.setContent(currentAnswers.get(gameRoom));
-        chattingMessage.setType("CURRENT_ANSWER");
-
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            jsonString = objectMapper.writeValueAsString(chattingMessage);
-
-            // jsonString을 사용하여 전송하세요
-            System.out.println(jsonString); // 결과 확인
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        redisChattindMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getRoomManagerName(), jsonString);
+//        ChattingMessage chattingMessage = new ChattingMessage();
+//        chattingMessage.setContent(currentDrawers.get(gameRoom).getNickName());
+//        chattingMessage.setType("CURRENT_DRAWER");
+//        chattingMessage.setMemberId(currentDrawers.get(gameRoom).getMemberId());
+//        chattingMessage.setNickName(currentDrawers.get(gameRoom).getNickName());
+//        chattingMessage.setGameRoomId(gameRoom.getGameRoomId());
+//        chattingMessage.setCreatedAt(null);
+//        String jsonString = "";
+//        try {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            jsonString = objectMapper.writeValueAsString(chattingMessage);
+//
+//            // jsonString을 사용하여 전송하세요
+//            System.out.println(jsonString); // 결과 확인
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        System.out.println("DRAWER jsonString : " + jsonString);
+//        redisChattindMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getGameRoomId(), jsonString);
+//
+//        chattingMessage.setContent(currentAnswers.get(gameRoom));
+//        chattingMessage.setType("CURRENT_ANSWER");
+//
+//        try {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            jsonString = objectMapper.writeValueAsString(chattingMessage);
+//
+//            // jsonString을 사용하여 전송하세요
+//            System.out.println(jsonString); // 결과 확인
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        redisChattindMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getGameRoomId(), jsonString);
 
         for (Member member : members) {
             gameRoomScores.get(gameRoom).put(member, 0); // 초기 점수 설정
@@ -158,6 +158,41 @@ public class CatchmindService extends CatchmindGameService {
         }
 
         isTimerRunning.put(gameRoom, true);
+
+        ChattingMessage chattingMessage = new ChattingMessage();
+        chattingMessage.setContent(currentDrawers.get(gameRoom).getNickName());
+        chattingMessage.setType("CURRENT_DRAWER");
+        chattingMessage.setMemberId(currentDrawers.get(gameRoom).getMemberId());
+        chattingMessage.setNickName(currentDrawers.get(gameRoom).getNickName());
+        chattingMessage.setGameRoomId(gameRoom.getGameRoomId());
+        chattingMessage.setCreatedAt(null);
+        String jsonString = "";
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            jsonString = objectMapper.writeValueAsString(chattingMessage);
+
+            // jsonString을 사용하여 전송하세요
+            System.out.println(jsonString); // 결과 확인
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("DRAWER jsonString : " + jsonString);
+        redisChattindMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getGameRoomId(), jsonString);
+
+        chattingMessage.setContent(currentAnswers.get(gameRoom));
+        chattingMessage.setType("CURRENT_ANSWER");
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            jsonString = objectMapper.writeValueAsString(chattingMessage);
+
+            // jsonString을 사용하여 전송하세요
+            System.out.println(jsonString); // 결과 확인
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        redisChattindMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getGameRoomId(), jsonString);
 
         gameRoomRoundTimes.put(gameRoom, 60);
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -190,7 +225,8 @@ public class CatchmindService extends CatchmindGameService {
 
     @Override
     public boolean guessAnswer(GameRoom gameRoom, Member member, String guess) {
-        if(guess.equals(getCurrentAnswer(gameRoom))) {
+        ChattingMessage chattingMessage = convertChattingMessageFromJson(guess);
+        if(chattingMessage.getType().equals("CORRECT_ANSWER") && chattingMessage.getContent().equals(getCurrentAnswer(gameRoom))) {
             Map<Member, Integer> scores = gameRoomScores.get(gameRoom);
             scores.put(member, scores.get(member) + 1);
 
@@ -234,7 +270,7 @@ public class CatchmindService extends CatchmindGameService {
         }
 
         String updatedJsonGameRoom = convertToFormattedJson(gameRoom);
-        redisGameRoomTemplate.opsForValue().set("gameroom:"+ updatedJsonGameRoom, gameRoom);
+        redisTemplate.opsForValue().set("gameroom:"+ updatedJsonGameRoom, gameRoom);
 
         return true;
     }
@@ -283,6 +319,19 @@ public class CatchmindService extends CatchmindGameService {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(json, GameRoom.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error while converting JSON to GameRoom", e);
+        }
+    }
+
+    private ChattingMessage convertChattingMessageFromJson(String json) {
+        if (json == null) {
+            throw new IllegalArgumentException("Input JSON string cannot be null");
+        }
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(json, ChattingMessage.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error while converting JSON to GameRoom", e);
         }
