@@ -82,7 +82,8 @@ public class MyHandler extends TextWebSocketHandler {
                 ChattingMessage parseChattingMessage = objectMapper.readValue(message.getPayload(), ChattingMessage.class);
 
                 if (gameRoom != null && gameRoom.getGameRoomStatus().equals("게임중")) {
-                    submitAnswer(gameRoom, session, message);
+                    submitAnswer(gameRoom, session, parseChattingMessage);
+//                    submitAnswer(parseChattingMessage, );
                 }
 
                 ChattingMessage chattingMessage = new ChattingMessage();
@@ -169,12 +170,12 @@ public class MyHandler extends TextWebSocketHandler {
         return null; // 해당하는 게임룸이 없을 경우 null 반환
     }
 
-    private void submitAnswer(GameRoom gameRoom, WebSocketSession session, TextMessage message) throws JsonProcessingException {
+    private void submitAnswer(GameRoom gameRoom, WebSocketSession session, ChattingMessage parseChattingMessage) throws JsonProcessingException {
 
         Member member = (Member) session.getAttributes().get("member");
 //        Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
 
-        if(catchmindService.guessAnswer(gameRoom, member, message.getPayload())) {
+        if(catchmindService.guessAnswer(gameRoom, member, parseChattingMessage)) {
 //            String correctMessage = member.getNickName() + "님이 정답을 맞혔습니다: " + message.getPayload();
 //            publishToGameRoom(gameRoomId, correctMessage);
             catchmindService.stopTimer(gameRoom);

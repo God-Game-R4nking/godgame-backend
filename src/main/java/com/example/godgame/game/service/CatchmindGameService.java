@@ -2,10 +2,11 @@ package com.example.godgame.game.service;
 
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.member.entity.Member;
+import com.example.godgame.websocket.webchat.ChattingMessage;
 
 import java.util.Map;
 
-public class CatchmindGameService implements GameService {
+public abstract class CatchmindGameService implements GameService {
 
     @Override
     public void initializeGameRoom(GameRoom gameRoom) {
@@ -15,6 +16,8 @@ public class CatchmindGameService implements GameService {
     public void startCatchmind(GameRoom gameRoom, int count) {
 
     }
+
+    public abstract boolean guessAnswer(GameRoom gameRoom, Member member, ChattingMessage parseChattingMessage);
 
     public boolean endGame(GameRoom gameRoom, Map<Member, Integer> scores) {
         return true;
