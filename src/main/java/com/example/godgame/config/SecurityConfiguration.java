@@ -70,6 +70,7 @@ public class SecurityConfiguration {
                         .antMatchers(HttpMethod.POST, "/comments").hasRole("USER")
                         .antMatchers(HttpMethod.GET, "/boards").hasAnyRole("USER", "ADMIN")
                         .antMatchers(HttpMethod.GET, "/boards/gets").permitAll()
+                        .antMatchers(HttpMethod.POST, "/game-rooms/*/start").permitAll()
                         .anyRequest().permitAll()
                 );
         return http.build();

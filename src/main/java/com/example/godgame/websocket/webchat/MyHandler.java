@@ -6,6 +6,7 @@ import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.service.GameRoomService;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.service.MemberService;
+import com.example.godgame.websocket.session.WebSocketSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +34,9 @@ public class MyHandler extends TextWebSocketHandler {
     private final CatchmindService catchmindService;
     private final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
+//    @Autowired
+//    private WebSocketSessionManager webSocketSessionManager;
+
     public MyHandler(ObjectMapper objectMapper, RedisTemplate<String, ChattingMessage> redisTemplate,
                      RedisMessageListenerContainer redisMessageListener, MemberService memberService,
                      GameRoomService gameRoomService, CatchmindService catchmindService) {
@@ -59,6 +63,7 @@ public class MyHandler extends TextWebSocketHandler {
             Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
             if (gameRoomId != null) {
                 subscribeToGameRoom(session, gameRoomId);
+//                webSocketSessionManager.addSession(session.getId(), session);
 //                String enteredMessage = member.getNickName() + "님이 입장하셨습니다.";
 //                publishToGameRoom(gameRoomId, enteredMessage);
             }
@@ -110,7 +115,7 @@ public class MyHandler extends TextWebSocketHandler {
         }
     }
 
-    private void subscribeToGameRoom(WebSocketSession session, Long gameRoomId) {
+    public void subscribeToGameRoom(WebSocketSession session, Long gameRoomId) {
         ChannelTopic topic = new ChannelTopic("gameRoom:" + gameRoomId);
         redisMessageListener.addMessageListener((message, pattern) -> {
             try {
@@ -121,12 +126,12 @@ public class MyHandler extends TextWebSocketHandler {
         }, topic);
     }
 
-    private void unsubscribeFromGameRoom(WebSocketSession session, Long gameRoomId) {
+    public void unsubscribeFromGameRoom(WebSocketSession session, Long gameRoomId) {
         ChannelTopic topic = new ChannelTopic("gameRoom:" + gameRoomId);
         redisMessageListener.removeMessageListener(null, topic);
     }
 
-    private void publishToGameRoom(Long gameRoomId, String message) {
+    public void publishToGameRoom(Long gameRoomId, String message) {
         redisTemplate.convertAndSend("gameRoom:" + gameRoomId, message);
     }
 
@@ -168,9 +173,11 @@ public class MyHandler extends TextWebSocketHandler {
 
         Member member = (Member) session.getAttributes().get("member");
         Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
+
         if(catchmindService.guessAnswer(gameRoom, member, message.getPayload())) {
             String correctMessage = member.getNickName() + "님이 정답을 맞혔습니다: " + message.getPayload();
             publishToGameRoom(gameRoomId, correctMessage);
+            catchmindService.stopTimer(gameRoom);
             catchmindService.endRound(gameRoom, catchmindService.getScores(gameRoom));
         }
     }
