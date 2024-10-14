@@ -172,11 +172,11 @@ public class MyHandler extends TextWebSocketHandler {
     private void submitAnswer(GameRoom gameRoom, WebSocketSession session, TextMessage message) throws JsonProcessingException {
 
         Member member = (Member) session.getAttributes().get("member");
-        Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
+//        Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
 
         if(catchmindService.guessAnswer(gameRoom, member, message.getPayload())) {
-            String correctMessage = member.getNickName() + "님이 정답을 맞혔습니다: " + message.getPayload();
-            publishToGameRoom(gameRoomId, correctMessage);
+//            String correctMessage = member.getNickName() + "님이 정답을 맞혔습니다: " + message.getPayload();
+//            publishToGameRoom(gameRoomId, correctMessage);
             catchmindService.stopTimer(gameRoom);
             catchmindService.endRound(gameRoom, catchmindService.getScores(gameRoom));
         }
