@@ -2,7 +2,9 @@ package com.example.godgame.redis;
 
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.websocket.webchat.ChattingMessage;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,23 +111,29 @@ public class RedisRepositoryConfig {
         RedisTemplate<String, ChattingMessage> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory);
 
-        // Key Serializer를 StringRedisSerializer로 설정
+        // Key Serializer 설정
         template.setKeySerializer(new StringRedisSerializer());
 
         // Value Serializer로 Jackson2JsonRedisSerializer를 사용하여 ChattingMessage 직렬화
         Jackson2JsonRedisSerializer<ChattingMessage> jsonSerializer = new Jackson2JsonRedisSerializer<>(ChattingMessage.class);
 
-        // ObjectMapper에 JavaTimeModule 등록
+        // ObjectMapper 설정
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        jsonSerializer.setObjectMapper(objectMapper);  // ObjectMapper를 serializer에 적용
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.configure(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
+        jsonSerializer.setObjectMapper(objectMapper);
 
         // Value와 Hash Value 모두 Jackson을 사용
         template.setValueSerializer(jsonSerializer);
         template.setHashValueSerializer(jsonSerializer);
 
+        // 트랜잭션 활성화 (필요한 경우)
+        template.setEnableTransactionSupport(true);
+
         return template;
     }
+
 
     @Bean
     public RedisTemplate<String, GameRoom> redisTemplate(RedisConnectionFactory connectionFactory) {

@@ -7,11 +7,13 @@ import com.example.godgame.gameroom.dto.GameRoomPostDto;
 import com.example.godgame.gameroom.dto.GameRoomResponseDto;
 import com.example.godgame.gameroom.mapper.GameRoomMapper;
 import com.example.godgame.gameroom.service.GameRoomService;
+import com.example.godgame.websocket.session.WebSocketSessionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.util.List;
 
@@ -22,6 +24,8 @@ public class GameRoomController {
     private GameRoomService gameRoomService;
     @Autowired
     private GameRoomMapper gameRoomMapper;
+    @Autowired
+    private WebSocketSessionManager webSocketSessionManager;
 
     @PostMapping
     public ResponseEntity<GameRoomResponseDto> createGameRoom(@RequestBody GameRoomPostDto requestBody) {
@@ -42,8 +46,10 @@ public class GameRoomController {
 
 
     @PostMapping("/{game-room-id}/join/{member-id}")
-    public ResponseEntity<GameRoomResponseDto> joinGame(@PathVariable("game-room-id") long gameRoomId, @PathVariable("member-id") Long memberId) {
+    public ResponseEntity<GameRoomResponseDto> joinGame(@PathVariable("game-room-id") long gameRoomId,
+                                                        @PathVariable("member-id") Long memberId) {
         try {
+//            WebSocketSession session = webSocketSessionManager.getSession(sessionId);
             GameRoomResponseDto response = gameRoomService.joinGame(gameRoomId, memberId);
             return ResponseEntity.ok(response);
         } catch (BusinessLogicException e) {
@@ -66,7 +72,12 @@ public class GameRoomController {
     @PostMapping("/{game-room-id}/leave/{member-id}")
     public ResponseEntity<GameRoomResponseDto> leaveGame(@PathVariable("game-room-id") long gameRoomId,
                                                          @PathVariable("member-id") Long memberId) {
+//        if (sessionId == null || sessionId.isEmpty()) {
+//            return ResponseEntity.badRequest().body(null);
+//        }
+
         try {
+//            WebSocketSession session = webSocketSessionManager.getSession(sessionId);
             GameRoomResponseDto response = gameRoomService.leaveGame(gameRoomId, memberId);
             return ResponseEntity.ok(response);
         } catch (BusinessLogicException e) {

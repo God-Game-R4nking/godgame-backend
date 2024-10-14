@@ -15,6 +15,7 @@ import com.example.godgame.history.repository.GameHistoryRepository;
 import com.example.godgame.history.repository.GameRoomHistoryRepository;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.service.MemberService;
+import com.example.godgame.websocket.session.WebSocketSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +23,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.socket.WebSocketSession;
+
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class GameRoomService {
@@ -41,20 +46,21 @@ public class GameRoomService {
     private GameRoomHistoryRepository gameRoomHistoryRepository;
 
     @Autowired
-    private ChatService chatService; // ChatService 추가
+    private ChatService chatService;
 
     @Autowired
     private Map<String, GameService> gameServiceMap = new HashMap<>();
 
     @Autowired
     private GameRepository gameRepository;
-    private Set<String> validGameNames;
-  
+
     @Autowired
     private MemberService memberService;
 
     @Autowired
     private CatchmindService catchmindService;
+
+
 
     @Autowired
     public GameRoomService(List<GameService> gameServices) {
@@ -76,6 +82,13 @@ public class GameRoomService {
             throw new RuntimeException("Failed to generate game room ID");
         }
 
+//        WebSocketSession session = webSocketSessionManager.addSession(String.valueOf(gameRoom.getGameRoomId()));
+//                webSocketSessionManager.addSession(String.valueOf(gameRoom.getGameRoomId()));
+//        if (session == null) {
+//            throw new RuntimeException("Session not found for game room ID: " + gameRoom.getGameRoomId());
+//        }
+//        webSocketSessionManager.addSession(String.valueOf(session.getId()), session);
+
         // Redis에서 해당 멤버의 게임룸 확인
         String existingGameRoomKey = "member:" + gameRoom.getMemberIds().get(0) + ":gameRoom";
         String existingRoomId = redisGameRoomTemplate.opsForValue().get(existingGameRoomKey);
@@ -87,10 +100,11 @@ public class GameRoomService {
 
             if (existingGameRoom != null && existingGameRoom.getCurrentPopulation() > 0) {
                 throw new RuntimeException("사용자는 이미 게임룸을 생성했습니다. 하나의 게임룸만 생성할 수 있습니다.");
-            } else {
-                // 비어있는 경우 기존 게임룸 삭제
-                removeGameRoomIfEmpty("gameRoom:" + existingRoomId);
             }
+//            else {
+//                // 비어있는 경우 기존 게임룸 삭제
+//                removeGameRoomIfEmpty("gameRoom:" + existingRoomId, sess);
+//            }
         }
 
         Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
@@ -125,22 +139,23 @@ public class GameRoomService {
                 gameRoom.getMemberIds(),
                 findMember.getNickName());
 
-
-
         return gameRoomResponseDto;
     }
 
+    @Transactional
     public void startGame(long gameRoomId, int count, Authentication authentication) {
 
         String gameRoomJson = redisGameRoomTemplate.opsForValue().get("gameRoom:" + gameRoomId);
         if (gameRoomJson == null) {
             throw new BusinessLogicException(ExceptionCode.GAME_ROOM_NOT_FOUND);
         }
+
         GameRoom gameRoom = convertFromJson(gameRoomJson); // JSON에서 역직렬화
 
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new BusinessLogicException(ExceptionCode.UNAUTHORIZED);
         }
+
         String managerId = authentication.getName();
         Member member = memberService.findMember(managerId);
         String managerName = member.getNickName();
@@ -206,6 +221,8 @@ public class GameRoomService {
         String updatedJsonGameRoom = convertToFormattedJson(gameRoom);
         redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoomId, updatedJsonGameRoom);
 
+//        webSocketSessionManager.addSession(session.getId(), session);
+
         Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
         return new GameRoomResponseDto(gameRoomId,
                 gameRoom.getGameName(),
@@ -230,10 +247,14 @@ public class GameRoomService {
         // 멤버 제거
         boolean removed = gameRoom.removeMember(memberId);
         if (removed) {
+
             // 인원수 업데이트
             int newPopulation = gameRoom.getCurrentPopulation() - 1;
             gameRoom.setCurrentPopulation(newPopulation);
             System.out.println("Updated population: " + newPopulation); // 로그 추가
+
+            long secondMemberId = gameRoom.getMemberIds().get(0);
+            gameRoom.setRoomManagerName(memberService.findVerifiedMemberId(secondMemberId).getNickName());
 
             // 게임룸을 다시 Redis에 저장
             redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoomId, convertToFormattedJson(gameRoom));
@@ -249,6 +270,11 @@ public class GameRoomService {
             // 게임 종료 시 Redis에 저장된 모든 채팅 메시지를 MongoDB에 저장
             chatService.saveAllChatsFromRedis(gameRoomId);
             Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));
+
+//            if (session != null) {
+//                webSocketSessionManager.removeSession(session.getId());
+//            }
+//            webSocketSessionManager.removeSession(session.getId());
 
             return new GameRoomResponseDto(gameRoomId,
                     gameRoom.getGameName(),
@@ -277,6 +303,7 @@ public class GameRoomService {
         if (gameRoom != null) {
             if (gameRoom.getCurrentPopulation() == 0) {
                 redisGameRoomTemplate.delete(gameRoomId); // 방 삭제
+//                webSocketSessionManager.removeSession(sessionId);
                 System.out.println("Game room deleted: " + gameRoomId);
             } else {
                 System.out.println("Game room not empty: " + gameRoomId + ", current population: " + gameRoom.getCurrentPopulation());
@@ -293,6 +320,11 @@ public class GameRoomService {
         if (gameRoom != null && "playing".equals(gameRoom.getGameRoomStatus())) {
             gameRoom.setGameRoomStatus("wait");
             redisGameRoomTemplate.opsForValue().set(roomName, convertToFormattedJson(gameRoom)); // 상태 업데이트
+
+//            for (String sessionId : sessions.keySet()) {
+//                WebSocketSession playerSession = sessions.get(sessionId);
+//                // 필요시 종료 메세지 구현
+//            }
 
             // 각 멤버의 게임 히스토리 저장
             if (gameRoom.getMemberIds() != null) {
@@ -429,11 +461,6 @@ public class GameRoomService {
             }
         }
         return null; // 찾지 못한 경우 null 반환
-    }
-
-    public void publishToGameRoom(Long gameRoomId, String message) {
-        String topic = "gameRoom:" + gameRoomId;
-        redisGameRoomTemplate.convertAndSend(topic, message); // Redis를 통해 메시지 퍼블리시
     }
 
     private boolean isValidGameName(String gameName) {

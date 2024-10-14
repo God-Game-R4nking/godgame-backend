@@ -10,6 +10,8 @@ import com.example.godgame.history.repository.GameHistoryRepository;
 import com.example.godgame.history.service.GameHistoryService;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.repository.MemberRepository;
+import com.example.godgame.websocket.webchat.ChattingMessage;
+import com.example.godgame.websocket.webchat.MyHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -17,6 +19,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,6 +36,7 @@ public class CatchmindService extends CatchmindGameService {
 
     private final CatchmindRepository catchmindRepository;
     private final RedisTemplate<String, GameRoom> redisGameRoomTemplate;
+    private final RedisTemplate<String, ChattingMessage> redisChattindMessageTemplate;
     private final MemberRepository memberRepository;
 
     // GameRoom별 상태를 관리하는 맵
@@ -44,11 +48,13 @@ public class CatchmindService extends CatchmindGameService {
     private final Map<GameRoom, Integer> gameRoomRoundTimes = new HashMap<>();
     private final Map<GameRoom, ScheduledExecutorService> schedulers = new HashMap<>();
     private boolean isGameRunning;
+    private Map<GameRoom, Boolean> isTimerRunning = new HashMap<>();
 
-    public CatchmindService(CatchmindRepository catchmindRepository, RedisTemplate<String, GameRoom> redisGameRoomTemplate, MemberRepository memberRepository) {
+    public CatchmindService(CatchmindRepository catchmindRepository, RedisTemplate<String, GameRoom> redisGameRoomTemplate, MemberRepository memberRepository, RedisTemplate<String, ChattingMessage> redisChattindMessageTemplate) {
         this.catchmindRepository = catchmindRepository;
         this.redisGameRoomTemplate = redisGameRoomTemplate;
         this.memberRepository = memberRepository;
+        this.redisChattindMessageTemplate = redisChattindMessageTemplate;
     }
 
     @Override
@@ -58,7 +64,7 @@ public class CatchmindService extends CatchmindGameService {
 
         gameRoomMembers.put(gameRoom, null);
 
-        String gameRoomKey = "gameroom:" + gameRoom.getGameRoomId();
+        String gameRoomKey = "gameRoom:" + gameRoom.getGameRoomId();
         redisGameRoomTemplate.opsForValue().set(gameRoomKey, gameRoom);
         GameRoom existingGameRoom = redisGameRoomTemplate.opsForValue().get(gameRoomKey);
 
@@ -104,6 +110,41 @@ public class CatchmindService extends CatchmindGameService {
         Map<Member, Integer> scores = gameRoomScores.get(gameRoom);
         currentAnswers.put(gameRoom, questions.get(0).getWord());
 
+        ChattingMessage chattingMessage = new ChattingMessage();
+        chattingMessage.setContent(currentDrawers.get(gameRoom).getNickName());
+        chattingMessage.setType("CURRENT_DRAWER");
+        chattingMessage.setMemberId(0);
+        chattingMessage.setNickName("관리자");
+        chattingMessage.setGameRoomId(gameRoom.getGameRoomId());
+        chattingMessage.setCreatedAt( LocalDateTime.now());
+        String jsonString = "";
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            jsonString = objectMapper.writeValueAsString(chattingMessage);
+
+            // jsonString을 사용하여 전송하세요
+            System.out.println(jsonString); // 결과 확인
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("DRAWER jsonString : " + jsonString);
+        redisChattindMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getRoomManagerName(), jsonString);
+
+        chattingMessage.setContent(currentAnswers.get(gameRoom));
+        chattingMessage.setType("CURRENT_ANSWER");
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            jsonString = objectMapper.writeValueAsString(chattingMessage);
+
+            // jsonString을 사용하여 전송하세요
+            System.out.println(jsonString); // 결과 확인
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        redisChattindMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getRoomManagerName(), jsonString);
+
         for (Member member : members) {
             gameRoomScores.get(gameRoom).put(member, 0); // 초기 점수 설정
         }
@@ -111,6 +152,13 @@ public class CatchmindService extends CatchmindGameService {
     }
 
     public void startTimer(GameRoom gameRoom, Map<Member, Integer> scores) {
+
+        if (isTimerRunning.getOrDefault(gameRoom, false)) {
+            return;
+        }
+
+        isTimerRunning.put(gameRoom, true);
+
         gameRoomRoundTimes.put(gameRoom, 60);
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         schedulers.put(gameRoom, scheduler);
@@ -121,17 +169,28 @@ public class CatchmindService extends CatchmindGameService {
                 time--;
                 gameRoomRoundTimes.put(gameRoom, time);
                 System.out.println("Remaining time: " + time);
-
-                if (time <= 0) {
-                    endRound(gameRoom, scores);
-                }
+            } else {
+                isTimerRunning.put(gameRoom, false);
+                endRound(gameRoom, scores);
+                scheduler.shutdown();
             }
-        }, 0, 1, TimeUnit.SECONDS);
+        },0, 1, TimeUnit.SECONDS);
+    }
+
+    public void stopTimer(GameRoom gameRoom) {
+
+        if (isTimerRunning.getOrDefault(gameRoom, false)) {
+            ScheduledExecutorService scheduler = schedulers.get(gameRoom);
+            if (scheduler != null) {
+                scheduler.shutdownNow();
+            }
+            isTimerRunning.put(gameRoom, false);
+        }
     }
 
     @Override
     public boolean guessAnswer(GameRoom gameRoom, Member member, String guess) {
-        if(guess.equals(getCurrentAnswer())) {
+        if(guess.equals(getCurrentAnswer(gameRoom))) {
             Map<Member, Integer> scores = gameRoomScores.get(gameRoom);
             scores.put(member, scores.get(member) + 1);
 
@@ -142,7 +201,6 @@ public class CatchmindService extends CatchmindGameService {
 
     public void endRound(GameRoom gameRoom, Map<Member, Integer> scores) {
         schedulers.get(gameRoom).schedule(() -> {
-            gameRoomRoundTimes.put(gameRoom, 30);
             int currentIndex = currentQuestionIndexes.get(gameRoom) + 1;
             currentQuestionIndexes.put(gameRoom, currentIndex);
 
