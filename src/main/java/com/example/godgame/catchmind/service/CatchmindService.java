@@ -110,54 +110,13 @@ public class CatchmindService extends CatchmindGameService {
         Map<Member, Integer> scores = gameRoomScores.get(gameRoom);
         currentAnswers.put(gameRoom, questions.get(0).getWord());
 
-//        ChattingMessage chattingMessage = new ChattingMessage();
-//        chattingMessage.setContent(currentDrawers.get(gameRoom).getNickName());
-//        chattingMessage.setType("CURRENT_DRAWER");
-//        chattingMessage.setMemberId(currentDrawers.get(gameRoom).getMemberId());
-//        chattingMessage.setNickName(currentDrawers.get(gameRoom).getNickName());
-//        chattingMessage.setGameRoomId(gameRoom.getGameRoomId());
-//        chattingMessage.setCreatedAt(null);
-//        String jsonString = "";
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            jsonString = objectMapper.writeValueAsString(chattingMessage);
-//
-//            // jsonString을 사용하여 전송하세요
-//            System.out.println(jsonString); // 결과 확인
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        System.out.println("DRAWER jsonString : " + jsonString);
-//        redisChattindMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getGameRoomId(), jsonString);
-//
-//        chattingMessage.setContent(currentAnswers.get(gameRoom));
-//        chattingMessage.setType("CURRENT_ANSWER");
-//
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            jsonString = objectMapper.writeValueAsString(chattingMessage);
-//
-//            // jsonString을 사용하여 전송하세요
-//            System.out.println(jsonString); // 결과 확인
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        redisChattindMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getGameRoomId(), jsonString);
-
         for (Member member : members) {
             gameRoomScores.get(gameRoom).put(member, 0); // 초기 점수 설정
         }
-        startTimer(gameRoom, scores);
+        startRound(gameRoom, scores);
     }
 
-    public void startTimer(GameRoom gameRoom, Map<Member, Integer> scores) {
-
-        if (isTimerRunning.getOrDefault(gameRoom, false)) {
-            return;
-        }
-
-        isTimerRunning.put(gameRoom, true);
+    public void startRound(GameRoom gameRoom, Map<Member, Integer> scores) {
 
         ChattingMessage chattingMessage = new ChattingMessage();
         chattingMessage.setContent(currentDrawers.get(gameRoom).getNickName());
@@ -193,6 +152,18 @@ public class CatchmindService extends CatchmindGameService {
         }
 
         redisChattindMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getGameRoomId(), jsonString);
+
+        startTimer(gameRoom, scores);
+
+    }
+
+    public void startTimer(GameRoom gameRoom, Map<Member, Integer> scores) {
+
+        if (isTimerRunning.getOrDefault(gameRoom, false)) {
+            return;
+        }
+
+        isTimerRunning.put(gameRoom, true);
 
         gameRoomRoundTimes.put(gameRoom, 60);
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -252,7 +223,7 @@ public class CatchmindService extends CatchmindGameService {
                 }
             }
         }, 5, TimeUnit.SECONDS);
-        startTimer(gameRoom, scores);
+        startRound(gameRoom, scores);
     }
 
     @Override
