@@ -68,9 +68,15 @@ public class CatchmindService extends CatchmindGameService {
         currentAnswers.put(gameRoom.getGameRoomId(), null);
         currentQuestionIndexes.put(gameRoom.getGameRoomId(), 0);
 
-        gameRoom.setScores(new HashMap<>());
+
+        for(Long memberId : gameRoom.getMemberIds()){
+            memberService.findVerifiedMemberId(memberId);
+            gameRoom.setScores(new HashMap<>());
+            getScores(gameRoom).put(memberId, 0);
+        }
         gameRoomScores.put(gameRoom.getGameRoomId(), getScores(gameRoom));
         isGameRunning = false;
+        isTimerRunning.put(gameRoom.getGameRoomId(), false);
     }
 
     @Override
@@ -150,7 +156,7 @@ public class CatchmindService extends CatchmindGameService {
     public void startTimer(GameRoom gameRoom) {
 
         if(redisHashGameRoomTemplate.opsForHash().get("hashKey:" + gameRoom.getGameRoomId(),
-                "isTimeRunning:").equals(false)) {
+                "isTimerRunning:").equals(false)) {
 
             isTimerRunning.put(gameRoom.getGameRoomId(), true);
             gameRoomRoundTimes.put(gameRoom.getGameRoomId(), 60);
@@ -193,7 +199,7 @@ public class CatchmindService extends CatchmindGameService {
     public void stopTimer(GameRoom gameRoom) {
 
         if (redisHashGameRoomTemplate.opsForHash().get("hashKey:" + gameRoom.getGameRoomId(),
-                "isTimeRunning:").equals(true)) {
+                "isTimerRunning:").equals(true)) {
             ScheduledExecutorService scheduler = schedulers.get(gameRoom.getGameRoomId());
             if (scheduler != null) {
                 scheduler.shutdownNow();
@@ -370,7 +376,7 @@ public class CatchmindService extends CatchmindGameService {
         redisHashGameRoomTemplate.opsForHash().put(gameRoomKey, "currentQuestionIndexes:", currentQuestionIndexes.get(gameRoom.getGameRoomId()));
         redisHashGameRoomTemplate.opsForHash().put(gameRoomKey, "gameRoomScores", gameRoomScores.get(gameRoom.getGameRoomId()));
         redisHashGameRoomTemplate.opsForHash().put(gameRoomKey, "isGameRunning:", isGameRunning);
-        redisHashGameRoomTemplate.opsForHash().put(gameRoomKey, "isTimeRunning:", isTimerRunning);
+        redisHashGameRoomTemplate.opsForHash().put(gameRoomKey, "isTimerRunning:", isTimerRunning.get(gameRoom.getGameRoomId()));
 
         String updatedJsonGameRoom = convertToFormattedJson(gameRoom);
         redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoom.getGameRoomId(), updatedJsonGameRoom);
