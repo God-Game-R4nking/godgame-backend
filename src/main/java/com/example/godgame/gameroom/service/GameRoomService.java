@@ -80,13 +80,6 @@ public class GameRoomService {
             throw new RuntimeException("Failed to generate game room ID");
         }
 
-//        WebSocketSession session = webSocketSessionManager.addSession(String.valueOf(gameRoom.getGameRoomId()));
-//                webSocketSessionManager.addSession(String.valueOf(gameRoom.getGameRoomId()));
-//        if (session == null) {
-//            throw new RuntimeException("Session not found for game room ID: " + gameRoom.getGameRoomId());
-//        }
-//        webSocketSessionManager.addSession(String.valueOf(session.getId()), session);
-
         // Redis에서 해당 멤버의 게임룸 확인
         String existingGameRoomKey = "member:" + gameRoom.getMemberIds().get(0) + ":gameRoom";
         String existingRoomId = redisGameRoomTemplate.opsForValue().get(existingGameRoomKey);
@@ -99,10 +92,10 @@ public class GameRoomService {
             if (existingGameRoom != null && existingGameRoom.getCurrentPopulation() > 0) {
                 throw new RuntimeException("사용자는 이미 게임룸을 생성했습니다. 하나의 게임룸만 생성할 수 있습니다.");
             }
-//            else {
-//                // 비어있는 경우 기존 게임룸 삭제
-//                removeGameRoomIfEmpty("gameRoom:" + existingRoomId, sess);
-//            }
+        }
+
+        if(gameRoom.getCount() > 100 || gameRoom.getCount() < 1) {
+            throw new BusinessLogicException(ExceptionCode.COUNT_WRONG);
         }
 
         Member findMember = memberService.findVerifiedMemberId(gameRoom.getMemberIds().get(0));

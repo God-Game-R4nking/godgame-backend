@@ -113,7 +113,7 @@ public class MyHandler extends TextWebSocketHandler {
                 }
 
                 if(parseChattingMessage.getType().equals("END_ROUND")) {
-
+                    // 라운드 종료 시 호출. 인덱스 및 점수 증가 처리. 모든 라운드 종료 시 알림 전달
                     GameRoom startRoundGameRoom = redisStringGameRoomTemplate.opsForValue().get(gameRoomKey);
                     Object gameRoomScores = redisHashGameRoomTemplate.opsForHash().get(gameRoomKey, "gameRoomScores");
                     Map<Long, Integer> scores;
@@ -124,6 +124,10 @@ public class MyHandler extends TextWebSocketHandler {
                     }
 
                     catchmindService.endRound(startRoundGameRoom, scores);
+                }
+
+                if(parseChattingMessage.getType().equals("END_GAME")) {
+
                 }
 
 

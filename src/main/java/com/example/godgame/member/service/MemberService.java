@@ -191,6 +191,14 @@ public class MemberService {
         return findMember;
     }
 
+    @Transactional(readOnly = true)
+    public Member findVerifiedNickName(String nickName){
+        Optional<Member> optionalMember = memberRepository.findByNickName(nickName);
+        Member findMember = optionalMember.orElseThrow(() ->
+                new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+        return findMember;
+    }
+
 
 }
 
