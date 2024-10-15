@@ -28,7 +28,7 @@ public class GameRoom {
     private String gameName;
     private String roomManagerName;
     private boolean isGameRunning;
-    private Map<Member, Integer> scores;
+    private Map<Long, Integer> scores;
     // 멤버 추가 메서드
     public boolean addMember(Long memberId) {
         if (currentPopulation < maxPopulation) {

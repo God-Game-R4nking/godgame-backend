@@ -43,7 +43,7 @@ public class CatchmindService extends CatchmindGameService {
     private final Map<GameRoom, Member> currentDrawers = new HashMap<>();
     private final Map<GameRoom, String> currentAnswers = new HashMap<>();
     private final Map<GameRoom, Integer> currentQuestionIndexes = new HashMap<>();
-    private final Map<GameRoom, Map<Member, Integer>> gameRoomScores = new HashMap<>();
+    private final Map<GameRoom, Map<Long, Integer>> gameRoomScores = new HashMap<>();
     private final Map<GameRoom, Integer> gameRoomRoundTimes = new HashMap<>();
     private final Map<GameRoom, ScheduledExecutorService> schedulers = new HashMap<>();
     private boolean isGameRunning;
@@ -298,15 +298,15 @@ public class CatchmindService extends CatchmindGameService {
     public boolean guessAnswer(GameRoom gameRoom, Member member, ChattingMessage parseChattingMessage) {
 
         if(parseChattingMessage.getType().equals("CORRECT_ANSWER") && parseChattingMessage.getContent().equals(getCurrentAnswer(gameRoom))) {
-            Map<Member, Integer> scores = gameRoomScores.get(gameRoom);
-            scores.put(member, scores.get(member) + 1);
+            Map<Long, Integer> scores = gameRoomScores.get(gameRoom);
+            scores.put(member.getMemberId(), scores.get(member.getMemberId()) + 1);
 
             return true;
         }
         return false;
     }
 
-    public void endRound(GameRoom gameRoom, Map<Member, Integer> scores) {
+    public void endRound(GameRoom gameRoom, Map<Long, Integer> scores) {
         schedulers.get(gameRoom).schedule(() -> {
             int currentIndex = currentQuestionIndexes.get(gameRoom) + 1;
             currentQuestionIndexes.put(gameRoom, currentIndex);
@@ -326,7 +326,7 @@ public class CatchmindService extends CatchmindGameService {
     }
 
     @Override
-    public boolean endGame(GameRoom gameRoom, Map<Member, Integer> scores) {
+    public boolean endGame(GameRoom gameRoom, Map<Long, Integer> scores) {
         isGameRunning = false;
         if (schedulers.containsKey(gameRoom) && schedulers.get(gameRoom) != null) {
             schedulers.get(gameRoom).shutdown();
@@ -367,7 +367,7 @@ public class CatchmindService extends CatchmindGameService {
         return true;
     }
 
-    public Map<Member, Integer> getScores (GameRoom gameRoom) {
+    public Map<Long, Integer> getScores (GameRoom gameRoom) {
         return gameRoomScores.get(gameRoom);
     }
 

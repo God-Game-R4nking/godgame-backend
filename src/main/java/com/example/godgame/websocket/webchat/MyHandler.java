@@ -18,7 +18,6 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -111,9 +110,9 @@ public class MyHandler extends TextWebSocketHandler {
 
                     GameRoom startRoundGameRoom = redisStringGameRoomTemplate.opsForValue().get(gameRoomKey);
                     Object gameRoomScores = redisHashGameRoomTemplate.opsForHash().get(gameRoomKey, "gameRoomScores");
-                    Map<Member, Integer> scores;
+                    Map<Long, Integer> scores;
                     if (gameRoomScores instanceof Map) {
-                        scores = (Map<Member, Integer>) gameRoomScores; // Map으로 캐스팅
+                        scores = (Map<Long, Integer>) gameRoomScores; // Map으로 캐스팅
                     } else {
                         throw new IllegalArgumentException("Invalid type for gameRoomScores");
                     }
