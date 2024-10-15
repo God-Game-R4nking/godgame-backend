@@ -184,16 +184,14 @@ public class CatchmindService extends CatchmindGameService {
     }
 
     @Override
-    public boolean guessAnswer(GameRoom gameRoom, Member member, ChattingMessage parseChattingMessage) {
+    public void guessAnswer(GameRoom gameRoom, Member member, ChattingMessage parseChattingMessage) {
 
         if(parseChattingMessage.getType().equals("CORRECT_ANSWER") && parseChattingMessage.getContent().equals(getCurrentAnswer(gameRoom))) {
             Map<Long, Integer> scores = gameRoomScores.get(gameRoom.getGameRoomId());
-            scores.put(member.getMemberId(), scores.get(member.getMemberId()) + 1);
-
-            return true;
+            scores.merge(member.getMemberId(), 1, Integer::sum);
         }
-        return false;
     }
+
 
     public void endRound(GameRoom gameRoom, Map<Long, Integer> scores) {
         schedulers.get(gameRoom.getGameRoomId()).schedule(() -> {
