@@ -1,6 +1,7 @@
 package com.example.godgame.websocket.config;
 
 import com.example.godgame.catchmind.service.CatchmindService;
+import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.service.GameRoomService;
 import com.example.godgame.member.service.MemberService;
 import com.example.godgame.websocket.webchat.ChattingMessage;
@@ -28,14 +29,18 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     private final RedisConnectionFactory redisConnectionFactory;
     private final RedisTemplate<String, ChattingMessage> redisTemplate;
+    private final RedisTemplate<String, GameRoom> redisStringGameRoomTemplate;
+    private final RedisTemplate<String, Object> redisHashGameRoomTemplate;
     private final MemberService memberService;
     private final GameRoomService gameRoomService;
     private final CatchmindService catchmindService;
     private final ObjectMapper objectMapper;
 
-    public WebSocketConfig(RedisConnectionFactory redisConnectionFactory, RedisTemplate<String, ChattingMessage> redisTemplate, MemberService memberService, GameRoomService gameRoomService, CatchmindService catchmindService, ObjectMapper objectMapper) {
+    public WebSocketConfig(RedisConnectionFactory redisConnectionFactory, RedisTemplate<String, ChattingMessage> redisTemplate, RedisTemplate<String, GameRoom> redisStringGameRoomTemplate, RedisTemplate<String, Object> redisHashGameRoomTemplate, MemberService memberService, GameRoomService gameRoomService, CatchmindService catchmindService, ObjectMapper objectMapper) {
         this.redisConnectionFactory = redisConnectionFactory;
         this.redisTemplate = redisTemplate;
+        this.redisStringGameRoomTemplate = redisStringGameRoomTemplate;
+        this.redisHashGameRoomTemplate = redisHashGameRoomTemplate;
         this.memberService = memberService;
         this.gameRoomService = gameRoomService;
         this.catchmindService = catchmindService;
@@ -51,7 +56,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Bean
     public MyHandler myHandler() {
-        return new MyHandler(objectMapper, redisTemplate, redisMessageListener(), memberService, gameRoomService, catchmindService);
+        return new MyHandler(objectMapper, redisTemplate, redisStringGameRoomTemplate, redisHashGameRoomTemplate, redisMessageListener(), memberService, gameRoomService, catchmindService);
     }
 
     @Bean
