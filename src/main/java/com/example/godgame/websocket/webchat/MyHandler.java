@@ -84,7 +84,7 @@ public class MyHandler extends TextWebSocketHandler {
                 ChattingMessage parseChattingMessage = objectMapper.readValue(message.getPayload(), ChattingMessage.class);
 
                 if (gameRoom != null && gameRoom.getGameRoomStatus().equals("playing")) {
-                    submitAnswer(gameRoom, session, parseChattingMessage);
+                    catchmindService.guessAnswer(gameRoom, member, parseChattingMessage);
                 }
 
                 if(parseChattingMessage.getType().equals("START_CATCHMIND")) {
@@ -222,17 +222,6 @@ public class MyHandler extends TextWebSocketHandler {
             }
         }
         return null; // 해당하는 게임룸이 없을 경우 null 반환
-    }
-
-    private void submitAnswer(GameRoom gameRoom, WebSocketSession session, ChattingMessage parseChattingMessage) throws JsonProcessingException {
-
-        Member member = (Member) session.getAttributes().get("member");
-        System.out.println("member : " + member);
-        if(catchmindService.guessAnswer(gameRoom, member, parseChattingMessage)) {
-            catchmindService.stopTimer(gameRoom);
-            System.out.println("=======stopTimer=======");
-            catchmindService.endRound(gameRoom, catchmindService.getScores(gameRoom));
-        }
     }
 
     public String convertToFormattedJson(GameRoom gameRoom) {
