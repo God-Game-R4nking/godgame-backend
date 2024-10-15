@@ -1,8 +1,5 @@
 package com.example.godgame.gameroom;
 
-
-import com.example.godgame.catchmind.entity.Catchmind;
-import com.example.godgame.member.entity.Member;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

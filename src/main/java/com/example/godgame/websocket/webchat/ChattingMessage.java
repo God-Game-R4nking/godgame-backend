@@ -21,6 +21,4 @@ public class ChattingMessage {
     private String content;
     private String type;
     private LocalDateTime createdAt = LocalDateTime.now();
-
-
 }
