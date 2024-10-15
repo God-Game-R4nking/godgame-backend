@@ -72,9 +72,9 @@ public class CatchmindService extends CatchmindGameService {
         for(Long memberId : gameRoom.getMemberIds()){
             memberService.findVerifiedMemberId(memberId);
             gameRoom.setScores(new HashMap<>());
-            getScores(gameRoom).put(memberId, 0);
+            gameRoom.getScores().put(memberId, 0);
         }
-        gameRoomScores.put(gameRoom.getGameRoomId(), getScores(gameRoom));
+        gameRoomScores.put(gameRoom.getGameRoomId(), gameRoom.getScores());
         isGameRunning = false;
         isTimerRunning.put(gameRoom.getGameRoomId(), false);
     }
@@ -213,12 +213,10 @@ public class CatchmindService extends CatchmindGameService {
     public void guessAnswer(GameRoom gameRoom, Member member, ChattingMessage parseChattingMessage) {
 
         if(parseChattingMessage.getType().equals("CORRECT_ANSWER") && parseChattingMessage.getContent().equals(getCurrentAnswer(gameRoom))) {
-            Map<Long, Integer> scores = gameRoomScores.get(gameRoom.getGameRoomId());
-            if(scores.get(member.getMemberId()) == null) {
-                scores.put(member.getMemberId(), 1);
-            } else {
-                scores.put(member.getMemberId(), scores.get(member.getMemberId()) + 1);
-            }
+            Map<Long, Integer> scores = gameRoom.getScores();
+            scores.put(member.getMemberId(), scores.get(member.getMemberId()) + 1);
+            redisHashGameRoomTemplate.opsForHash().put("hashKey:" + gameRoom.getGameRoomId(),
+                    "gameRoomScores:", scores);
         }
     }
 
@@ -315,11 +313,6 @@ public class CatchmindService extends CatchmindGameService {
 //        schedulers.remove(gameRoom);
 //        isTimerRunning.remove(gameRoom);
 
-    }
-
-
-    public Map<Long, Integer> getScores (GameRoom gameRoom) {
-        return gameRoomScores.get(gameRoom.getGameRoomId());
     }
 
     @Override
