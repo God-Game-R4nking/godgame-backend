@@ -25,5 +25,5 @@ public class GameRoomResponseDto {
     private List<Long> memberIds;
     private String roomManagerName;
     private boolean isGameRunning;
-    private Map<Member, Integer> scores;
+    private Map<Long, Integer> scores;
 }
