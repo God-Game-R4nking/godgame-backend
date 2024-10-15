@@ -140,17 +140,17 @@ public class RedisRepositoryConfig {
     @Bean
     public RedisTemplate<String, GameRoom> redisStringGameRoomTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, GameRoom> template = new RedisTemplate<>();
+
         template.setConnectionFactory(connectionFactory);
+
         // Key Serializer 설정
         template.setKeySerializer(new StringRedisSerializer());
 
         // Value Serializer로 Jackson2JsonRedisSerializer를 사용하여 ChattingMessage 직렬화
-        Jackson2JsonRedisSerializer<ChattingMessage> jsonSerializer = new Jackson2JsonRedisSerializer<>(ChattingMessage.class);
+        Jackson2JsonRedisSerializer<GameRoom> jsonSerializer = new Jackson2JsonRedisSerializer<>(GameRoom.class);
 
         // ObjectMapper 설정
         ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.configure(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
         jsonSerializer.setObjectMapper(objectMapper);
 

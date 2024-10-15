@@ -38,8 +38,8 @@ public class CatchmindService extends CatchmindGameService {
     private final MemberRepository memberRepository;
 
     // GameRoom별 상태를 관리하는 맵
-    private final Map<GameRoom, List<Member>> gameRoomMembers = new HashMap<>();
-    private final Map<GameRoom, Member> currentDrawers = new HashMap<>();
+    private final Map<GameRoom, List<Long>> gameRoomMemberIds = new HashMap<>();
+    private final Map<GameRoom, String> currentDrawers = new HashMap<>();
     private final Map<GameRoom, String> currentAnswers = new HashMap<>();
     private final Map<GameRoom, Integer> currentQuestionIndexes = new HashMap<>();
     private final Map<GameRoom, Map<Long, Integer>> gameRoomScores = new HashMap<>();
@@ -63,14 +63,14 @@ public class CatchmindService extends CatchmindGameService {
 
         gameRoom.setGameRoomStatus("playing");
 
-        gameRoomMembers.put(gameRoom, null);
+        gameRoomMemberIds.put(gameRoom, null);
 
         String gameRoomKey = "gameRoom:" + gameRoom.getGameRoomId();
         GameRoom existingGameRoom = redisStringGameRoomTemplate.opsForValue().get(gameRoomKey);
 
         if (existingGameRoom != null) {
             List<Long> memberIds = existingGameRoom.getMemberIds(); // GameRoom 객체에 멤버 리스트가 있어야 합니다.
-            gameRoomMembers.put(gameRoom, memberRepository.findAllById(memberIds)); // 멤버 리스트를 맵에 추가
+            gameRoomMemberIds.put(gameRoom, memberIds); // 멤버 리스트를 맵에 추가
         } else {
             throw new BusinessLogicException(ExceptionCode.GAME_ROOM_NOT_FOUND);
         }
@@ -86,37 +86,79 @@ public class CatchmindService extends CatchmindGameService {
 
     @Override
     public void startCatchmind(GameRoom gameRoom, int count) {
-    // count 받는 부분 임시 생략
-//
-//        String existingGameRoomJson = redisGameRoomTemplate.opsForValue().get(gameRoom);
-//        GameRoom existingGameRoom = convertFromJson(existingGameRoomJson);
+        System.out.println("Starting Catchmind for Game Room ID: " + gameRoom.getGameRoomId());
 
-        initializeGameRoom(gameRoom);
+        try {
+            initializeGameRoom(gameRoom);
+            System.out.println("Game room initialized.");
 
-        List<Member> members = gameRoomMembers.get(gameRoom);
-        for (Member member : members) {
-            member.setMemberGameStatus(MEMBER_PLAY);
+            List<Long> memberIds = gameRoomMemberIds.get(gameRoom);
+            if (memberIds == null || memberIds.size() < 2) {
+                System.out.println("Not enough members.");
+                throw new BusinessLogicException(ExceptionCode.NEED_MORE_MEMBER);
+            }
+
+            for (Long memberId : memberIds) {
+                Optional<Member> optionalMember = memberRepository.findById(memberId);
+                Member member = optionalMember.orElseThrow(()-> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+                member.setMemberGameStatus(MEMBER_PLAY);
+            }
+
+            isGameRunning = true;
+            currentDrawers.put(gameRoom, findNickname(memberIds.get(0)));
+
+            List<Catchmind> questions = findRandomWord(count);
+            if (questions.isEmpty()) {
+                System.out.println("No questions available.");
+                throw new BusinessLogicException(ExceptionCode.QUESTION_NOT_AVAILABLE);
+            }
+
+            redisCatmindTemplate.opsForValue().set("gameRoom:" + gameRoom.getGameRoomId(), questions);
+            currentAnswers.put(gameRoom, questions.get(0).getWord());
+
+            saveGameRoomState(gameRoom);
+            System.out.println("Catchmind started successfully.");
+        } catch (Exception e) {
+            System.out.println("Error occurred: " + e.getMessage());
+            e.printStackTrace();
+            throw e; // 예외를 다시 던져서 로그에 기록
         }
-
-        if (members.size() < 2) {
-            throw new BusinessLogicException(ExceptionCode.NEED_MORE_MEMBER);
-        }
-
-        isGameRunning = true;
-        currentDrawers.put(gameRoom, members.get(0)); // 첫 번째 그릴 사람 설정
-
-        List<Catchmind> questions = findRandomWord(count);
-        if (questions.isEmpty()) {
-            throw new BusinessLogicException(ExceptionCode.QUESTION_NOT_AVAILABLE);
-        }
-
-        redisCatmindTemplate.opsForValue().set("gameRoom:" + gameRoom.getGameRoomId(), questions);
-        currentAnswers.put(gameRoom, questions.get(0).getWord());
-
-        saveGameRoomState(gameRoom);
-
-        // startRound 호출 제거
     }
+
+
+//    @Override
+//    public void startCatchmind(GameRoom gameRoom, int count) {
+//    // count 받는 부분 임시 생략
+////
+////        String existingGameRoomJson = redisGameRoomTemplate.opsForValue().get(gameRoom);
+////        GameRoom existingGameRoom = convertFromJson(existingGameRoomJson);
+//
+//        initializeGameRoom(gameRoom);
+//
+//        List<Member> members = gameRoomMembers.get(gameRoom);
+//        for (Member member : members) {
+//            member.setMemberGameStatus(MEMBER_PLAY);
+//        }
+//
+//        if (members.size() < 2) {
+//            throw new BusinessLogicException(ExceptionCode.NEED_MORE_MEMBER);
+//        }
+//
+//        isGameRunning = true;
+//        currentDrawers.put(gameRoom, members.get(0)); // 첫 번째 그릴 사람 설정
+//
+//        List<Catchmind> questions = findRandomWord(count);
+//        if (questions.isEmpty()) {
+//            throw new BusinessLogicException(ExceptionCode.QUESTION_NOT_AVAILABLE);
+//        }
+//
+//        redisCatmindTemplate.opsForValue().set("gameRoom:" + gameRoom.getGameRoomId(), questions);
+//        currentAnswers.put(gameRoom, questions.get(0).getWord());
+//
+//        saveGameRoomState(gameRoom);
+//
+//        // startRound 호출 제거
+//    }
 
 //    @Override
 //    public void startCatchmind(GameRoom gameRoom, int count) {
@@ -151,11 +193,12 @@ public class CatchmindService extends CatchmindGameService {
 
     public void startRound(GameRoom gameRoom) {
 
+
         ChattingMessage chattingMessage = new ChattingMessage();
-        chattingMessage.setContent(currentDrawers.get(gameRoom).getNickName());
+        chattingMessage.setContent(currentDrawers.get(gameRoom));
         chattingMessage.setType("CURRENT_DRAWER");
-        chattingMessage.setMemberId(currentDrawers.get(gameRoom).getMemberId());
-        chattingMessage.setNickName(currentDrawers.get(gameRoom).getNickName());
+        chattingMessage.setMemberId(memberRepository.findByNickName(currentDrawers.get(gameRoom)));
+        chattingMessage.setNickName(currentDrawers.get(gameRoom));
         chattingMessage.setGameRoomId(gameRoom.getGameRoomId());
         chattingMessage.setCreatedAt(null);
         String jsonString = "";
@@ -308,8 +351,8 @@ public class CatchmindService extends CatchmindGameService {
 
             if (currentIndex < questions.size()) {
                 currentAnswers.put(gameRoom, questions.get(currentIndex).getWord());
-                List<Member> members = gameRoomMembers.get(gameRoom);
-                currentDrawers.put(gameRoom, members.get(currentIndex % members.size()));
+                List<Long> memberIds = gameRoomMemberIds.get(gameRoom);
+                currentDrawers.put(gameRoom, findNickname(memberIds.get(currentIndex % memberIds.size())));
             } else {
                 if(!endGame(gameRoom, scores)) {
                     throw new BusinessLogicException(ExceptionCode.GAME_END_ERROR);
@@ -328,11 +371,11 @@ public class CatchmindService extends CatchmindGameService {
         gameRoom.setGameRoomStatus("wait");
         gameRoomScores.put(gameRoom, scores);
 
-
-
-        List<Member> members = gameRoomMembers.get(gameRoom);
-        for (int i = 0; i < members.size(); i++) {
-            members.get(i).setMemberGameStatus(MEMBER_WAIT);
+        List<Long> memberIds = gameRoomMemberIds.get(gameRoom);
+        for (int i = 0; i < memberIds.size(); i++) {
+            Optional<Member> optionalMember = memberRepository.findById(memberIds.get(i));
+            Member member = optionalMember.orElseThrow(()-> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+            member.setMemberGameStatus(MEMBER_WAIT);
         }
 
         String updatedJsonGameRoom = convertToFormattedJson(gameRoom);
@@ -373,17 +416,17 @@ public class CatchmindService extends CatchmindGameService {
         return catchmindRepository.findRandomCatchminds(count);
     }
 
-    public List<Member> getMembersFromIds(List<Long> memberIds) {
-
-        if (memberIds == null || memberIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-        List<Member> members = memberRepository.findAllById(memberIds);
-        if (members.isEmpty()) {
-            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND);
-        }
-        return members;
-    }
+//    public List<String> getMembersFromIds(List<Long> memberIds) {
+//
+//        if (memberIds == null || memberIds.isEmpty()) {
+//            return new ArrayList<>();
+//        }
+//        List<String> nickNames = memberRepository.findAllById(memberIds);
+//        if (members.isEmpty()) {
+//            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND);
+//        }
+//        return nickNames;
+//    }
 
     public String convertToFormattedJson(GameRoom gameRoom) {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -433,4 +476,12 @@ public class CatchmindService extends CatchmindGameService {
 
         redisStringGameRoomTemplate.opsForValue().set(gameRoomKey, gameRoom);
     }
+
+    private String findNickname(Long memberId) {
+        Optional<Member> optionalMember = memberRepository.findById(memberId);
+        Member member = optionalMember.orElseThrow(()-> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+
+        return member.getNickName();
+    }
+
 }

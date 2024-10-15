@@ -1,6 +1,8 @@
 package com.example.godgame.websocket.webchat;
 
 import com.example.godgame.catchmind.service.CatchmindService;
+import com.example.godgame.exception.BusinessLogicException;
+import com.example.godgame.exception.ExceptionCode;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.service.GameRoomService;
 import com.example.godgame.member.entity.Member;
@@ -88,7 +90,11 @@ public class MyHandler extends TextWebSocketHandler {
                 if(parseChattingMessage.getType().equals("START_CATCHMIND")) {
                     // 게임 시작 시. 기초 데이터 초기화 및 세팅
                     int count = Integer.parseInt(parseChattingMessage.getContent());
-                    catchmindService.startCatchmind(gameRoom, count);
+                    if(gameRoom != null) {
+                        catchmindService.startCatchmind(gameRoom, count);
+                    } else {
+                        throw new BusinessLogicException(ExceptionCode.GAME_NOT_PROCEED);
+                    }
                 }
 
                 if(parseChattingMessage.getType().equals("START_ROUND")) {
@@ -220,7 +226,7 @@ public class MyHandler extends TextWebSocketHandler {
         System.out.println("member : " + member);
         if(catchmindService.guessAnswer(gameRoom, member, parseChattingMessage)) {
             catchmindService.stopTimer(gameRoom);
-            System.out.println("stopTimer=======");
+            System.out.println("=======stopTimer=======");
             catchmindService.endRound(gameRoom, catchmindService.getScores(gameRoom));
         }
     }
