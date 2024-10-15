@@ -29,7 +29,6 @@ import static com.example.godgame.member.entity.Member.MemberGameStatus.MEMBER_W
 @EnableScheduling
 public class CatchmindService extends CatchmindGameService {
 
-
     private final CatchmindRepository catchmindRepository;
     private final RedisTemplate<String, GameRoom> redisStringGameRoomTemplate;
     private final RedisTemplate<String, String> redisGameRoomTemplate;
@@ -118,12 +117,6 @@ public class CatchmindService extends CatchmindGameService {
 
         // startRound 호출 제거
     }
-
-    @Override
-    public void startCatchmind(GameRoom gameRoom) {
-
-    }
-
 
 //    @Override
 //    public void startCatchmind(GameRoom gameRoom, int count) {
