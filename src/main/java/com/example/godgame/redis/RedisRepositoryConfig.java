@@ -1,5 +1,6 @@
 package com.example.godgame.redis;
 
+import com.example.godgame.catchmind.entity.Catchmind;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.websocket.webchat.ChattingMessage;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -21,6 +22,7 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Configuration
 @EnableRedisRepositories // Redis 리포지토리를 활성화하여 Redis 데이터를 JPA처럼 다룰 수 있게 해주는 애너테이션
@@ -136,11 +138,53 @@ public class RedisRepositoryConfig {
 
 
     @Bean
-    public RedisTemplate<String, GameRoom> redisTemplate(RedisConnectionFactory connectionFactory) {
+    public RedisTemplate<String, GameRoom> redisStringGameRoomTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, GameRoom> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        // Key Serializer 설정
+        template.setKeySerializer(new StringRedisSerializer());
+
+        // Value Serializer로 Jackson2JsonRedisSerializer를 사용하여 ChattingMessage 직렬화
+        Jackson2JsonRedisSerializer<ChattingMessage> jsonSerializer = new Jackson2JsonRedisSerializer<>(ChattingMessage.class);
+
+        // ObjectMapper 설정
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.configure(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
+        jsonSerializer.setObjectMapper(objectMapper);
+
+        // Value와 Hash Value 모두 Jackson을 사용
+        template.setValueSerializer(jsonSerializer);
+        template.setHashValueSerializer(jsonSerializer);
+
+        // 트랜잭션 활성화 (필요한 경우)
+        template.setEnableTransactionSupport(true);
+
+        return template;
+    }
+
+    @Bean
+    public RedisTemplate<String, List<Catchmind>> redisCatchmindTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, List<Catchmind>> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new GenericJackson2JsonRedisSerializer()); // JSON 직렬화
+        return template;
+    }
+
+    @Bean
+    public RedisTemplate<String, Object> redisHashGameRoomTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        // Redis에 저장할 때 key와 value의 직렬화 방식 설정
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+
+        template.afterPropertiesSet();
         return template;
     }
 

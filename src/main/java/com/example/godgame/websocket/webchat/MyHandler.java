@@ -1,14 +1,11 @@
 package com.example.godgame.websocket.webchat;
 
 import com.example.godgame.catchmind.service.CatchmindService;
-import com.example.godgame.game.service.GameService;
 import com.example.godgame.gameroom.GameRoom;
 import com.example.godgame.gameroom.service.GameRoomService;
 import com.example.godgame.member.entity.Member;
 import com.example.godgame.member.service.MemberService;
-import com.example.godgame.websocket.session.WebSocketSessionManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,6 +18,8 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,20 +27,21 @@ public class MyHandler extends TextWebSocketHandler {
 
     private final ObjectMapper objectMapper;
     private final RedisTemplate<String, ChattingMessage> redisTemplate;
+    private final RedisTemplate<String, GameRoom> redisStringGameRoomTemplate;
+    private final RedisTemplate<String, Object> redisHashGameRoomTemplate;
     private final RedisMessageListenerContainer redisMessageListener;
     private final MemberService memberService;
     private final GameRoomService gameRoomService;
     private final CatchmindService catchmindService;
     private final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
-//    @Autowired
-//    private WebSocketSessionManager webSocketSessionManager;
-
-    public MyHandler(ObjectMapper objectMapper, RedisTemplate<String, ChattingMessage> redisTemplate,
+    public MyHandler(ObjectMapper objectMapper, RedisTemplate<String, ChattingMessage> redisTemplate, RedisTemplate<String, GameRoom> redisStringGameRoomTemplate, RedisTemplate<String, Object> redisHashGameRoomTemplate,
                      RedisMessageListenerContainer redisMessageListener, MemberService memberService,
                      GameRoomService gameRoomService, CatchmindService catchmindService) {
         this.objectMapper = objectMapper;
         this.redisTemplate = redisTemplate;
+        this.redisStringGameRoomTemplate = redisStringGameRoomTemplate;
+        this.redisHashGameRoomTemplate = redisHashGameRoomTemplate;
         this.redisMessageListener = redisMessageListener;
         this.memberService = memberService;
         this.gameRoomService = gameRoomService;
@@ -78,13 +78,58 @@ public class MyHandler extends TextWebSocketHandler {
         if (member != null) {
             Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
             if (gameRoomId != null) {
-                GameRoom gameRoom = gameRoomService.getGameRoom("gameRoom:" + gameRoomId);
+                String gameRoomKey = "gameRoom:" + gameRoomId;
+                GameRoom gameRoom = gameRoomService.getGameRoom(gameRoomKey);
                 ChattingMessage parseChattingMessage = objectMapper.readValue(message.getPayload(), ChattingMessage.class);
 
-                if (gameRoom != null && gameRoom.getGameRoomStatus().equals("게임중")) {
+                if (gameRoom != null && gameRoom.getGameRoomStatus().equals("playing")) {
                     submitAnswer(gameRoom, session, parseChattingMessage);
-//                    submitAnswer(parseChattingMessage, );
                 }
+
+                if(parseChattingMessage.getType().equals("START_CATCHMIND")) {
+                    // 게임 시작 시. 기초 데이터 초기화 및 세팅
+                    int count = Integer.parseInt(parseChattingMessage.getContent());
+                    catchmindService.startCatchmind(gameRoom, count);
+                }
+
+                if(parseChattingMessage.getType().equals("START_ROUND")) {
+                    // 라운드 시작 시. DRAWER랑 ANSWER 알려주는 메서드.
+                    catchmindService.startRound(gameRoom);
+                }
+
+                if(parseChattingMessage.getType().equals("START_TIMER")) {
+                    // 라운드 시작시 타이머 호출.
+                    catchmindService.startTimer(gameRoom);
+                }
+
+                if(parseChattingMessage.getType().equals("STOP_TIMER")) {
+                    // 라운드 시작시 타이머 호출.
+                    catchmindService.stopTimer(gameRoom);
+                }
+
+                if(parseChattingMessage.getType().equals("END_ROUND")) {
+
+                    GameRoom startRoundGameRoom = redisStringGameRoomTemplate.opsForValue().get(gameRoomKey);
+                    Object gameRoomScores = redisHashGameRoomTemplate.opsForHash().get(gameRoomKey, "gameRoomScores");
+                    Map<Member, Integer> scores;
+                    if (gameRoomScores instanceof Map) {
+                        scores = (Map<Member, Integer>) gameRoomScores; // Map으로 캐스팅
+                    } else {
+                        throw new IllegalArgumentException("Invalid type for gameRoomScores");
+                    }
+
+                    catchmindService.endRound(startRoundGameRoom, scores);
+                }
+
+
+
+
+
+
+
+
+
+
 
                 ChattingMessage chattingMessage = new ChattingMessage();
                 chattingMessage.setChatId(redisTemplate.opsForValue().increment("chatIdCounter"));
@@ -173,13 +218,41 @@ public class MyHandler extends TextWebSocketHandler {
     private void submitAnswer(GameRoom gameRoom, WebSocketSession session, ChattingMessage parseChattingMessage) throws JsonProcessingException {
 
         Member member = (Member) session.getAttributes().get("member");
-//        Long gameRoomId = getGameRoomIdByMemberId(member.getMemberId());
-
+        System.out.println("member : " + member);
         if(catchmindService.guessAnswer(gameRoom, member, parseChattingMessage)) {
-//            String correctMessage = member.getNickName() + "님이 정답을 맞혔습니다: " + message.getPayload();
-//            publishToGameRoom(gameRoomId, correctMessage);
             catchmindService.stopTimer(gameRoom);
+            System.out.println("stopTimer=======");
             catchmindService.endRound(gameRoom, catchmindService.getScores(gameRoom));
         }
     }
+
+    public String convertToFormattedJson(GameRoom gameRoom) {
+        if (gameRoom == null) {
+            throw new IllegalArgumentException("GameRoom cannot be null");
+        }
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            String jsonString = objectMapper.writeValueAsString(gameRoom);
+            System.out.println("Converted JSON: " + jsonString); // JSON 출력
+            return jsonString;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to convert GameRoom to JSON", e);
+        }
+    }
+
+
+    private GameRoom convertFromJson(String json) {
+        if (json == null) {
+            throw new IllegalArgumentException("Input JSON string cannot be null");
+        }
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.readValue(json, GameRoom.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error while converting JSON to GameRoom", e);
+        }
+    }
+
 }

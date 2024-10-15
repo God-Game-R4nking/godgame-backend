@@ -60,8 +60,6 @@ public class GameRoomService {
     @Autowired
     private CatchmindService catchmindService;
 
-
-
     @Autowired
     public GameRoomService(List<GameService> gameServices) {
         // 각 게임 서비스들을 매핑
@@ -137,7 +135,9 @@ public class GameRoomService {
                 gameRoom.getGameRoomStatus(),
                 gameRoom.getMaxPopulation(),
                 gameRoom.getMemberIds(),
-                findMember.getNickName());
+                findMember.getNickName(),
+                gameRoom.isGameRunning(),
+                gameRoom.getScores());
 
         return gameRoomResponseDto;
     }
@@ -232,7 +232,9 @@ public class GameRoomService {
                 gameRoom.getGameRoomStatus(),
                 gameRoom.getMaxPopulation(),
                 gameRoom.getMemberIds(),
-                findMember.getNickName());
+                findMember.getNickName(),
+                gameRoom.isGameRunning(),
+                gameRoom.getScores());
     }
 
     public GameRoomResponseDto leaveGame(long gameRoomId, Long memberId) {
@@ -284,7 +286,9 @@ public class GameRoomService {
                     gameRoom.getGameRoomStatus(),
                     gameRoom.getMaxPopulation(),
                     gameRoom.getMemberIds(),
-                    findMember.getNickName());
+                    findMember.getNickName(),
+                    gameRoom.isGameRunning(),
+                    gameRoom.getScores());
         }
 
         throw new BusinessLogicException(ExceptionCode.LEAVE_FAIL);
@@ -372,7 +376,9 @@ public class GameRoomService {
                 gameRoom.getGameRoomStatus(),
                 gameRoom.getMaxPopulation(),
                 gameRoom.getMemberIds(),
-                findMember.getNickName()
+                findMember.getNickName(),
+                gameRoom.isGameRunning(),
+                gameRoom.getScores()
         );
 
         return gameRoomResponseDto;
@@ -409,7 +415,9 @@ public class GameRoomService {
                     gameRoom.getGameRoomStatus(),
                     gameRoom.getMaxPopulation(),
                     gameRoom.getMemberIds(),
-                    findMember.getNickName());
+                    findMember.getNickName(),
+                    gameRoom.isGameRunning(),
+                    gameRoom.getScores());
             list.add(gameRoomResponseDto);
         }
 

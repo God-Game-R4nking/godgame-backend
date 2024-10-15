@@ -1,12 +1,15 @@
 package com.example.godgame.gameroom;
 
 
+import com.example.godgame.catchmind.entity.Catchmind;
+import com.example.godgame.member.entity.Member;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
 // 레디스에서 사용할 게임룸 클래스 정의
 @Getter
@@ -24,7 +27,8 @@ public class GameRoom {
     private List<Long> memberIds;
     private String gameName;
     private String roomManagerName;
-
+    private boolean isGameRunning;
+    private Map<Member, Integer> scores;
     // 멤버 추가 메서드
     public boolean addMember(Long memberId) {
         if (currentPopulation < maxPopulation) {
