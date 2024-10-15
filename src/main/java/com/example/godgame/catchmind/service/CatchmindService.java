@@ -46,7 +46,7 @@ public class CatchmindService extends CatchmindGameService {
     private final Map<Long, Integer> gameRoomRoundTimes = new HashMap<>();
     private final Map<Long, ScheduledExecutorService> schedulers = new HashMap<>();
     private boolean isGameRunning;
-    private Map<Long, Boolean> isTimerRunning = new HashMap<>();
+    private final Map<Long, Boolean> isTimerRunning = new HashMap<>();
 
     public CatchmindService(CatchmindRepository catchmindRepository, RedisTemplate<String, GameRoom> redisTemplate, RedisTemplate<String, String> redisGameRoomTemplate, RedisTemplate<String, ChattingMessage> redisChattingMessageTemplate, RedisTemplate<String, List<Catchmind>> redisCatmindTemplate, RedisTemplate<String, Object> redisHashGameRoomTemplate, MemberService memberService) {
         this.catchmindRepository = catchmindRepository;
@@ -149,31 +149,51 @@ public class CatchmindService extends CatchmindGameService {
 
     public void startTimer(GameRoom gameRoom) {
 
-        if (isTimerRunning.getOrDefault(gameRoom.getGameRoomId(), false)) {
-            return;
+        if(redisHashGameRoomTemplate.opsForHash().get("hashKey:" + gameRoom.getGameRoomId(),
+                "isTimeRunning:").equals(false)) {
+
+            isTimerRunning.put(gameRoom.getGameRoomId(), true);
+            gameRoomRoundTimes.put(gameRoom.getGameRoomId(), 60);
+            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+            schedulers.put(gameRoom.getGameRoomId(), scheduler);
+
+            scheduler.scheduleAtFixedRate(() -> {
+                int time = gameRoomRoundTimes.get(gameRoom.getGameRoomId());
+                if (time > 0) {
+                    time--;
+                    gameRoomRoundTimes.put(gameRoom.getGameRoomId(), time);
+                    System.out.println("Remaining time: " + time);
+                } else {
+                    isTimerRunning.put(gameRoom.getGameRoomId(), false);
+                    scheduler.shutdown();
+                }
+            }, 0, 1, TimeUnit.SECONDS);
+
+            ChattingMessage chattingMessage = new ChattingMessage();
+            chattingMessage.setContent(null);
+            chattingMessage.setType("STOP_TIMER");
+            chattingMessage.setMemberId(0);
+            chattingMessage.setNickName(null);
+            chattingMessage.setGameRoomId(gameRoom.getGameRoomId());
+            chattingMessage.setCreatedAt(null);
+            String jsonString = "";
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                jsonString = objectMapper.writeValueAsString(chattingMessage);
+
+                System.out.println("STOP_TIMER jsonString : " + jsonString);
+                redisChattingMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getGameRoomId(), jsonString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
-        isTimerRunning.put(gameRoom.getGameRoomId(), true);
-        gameRoomRoundTimes.put(gameRoom.getGameRoomId(), 60);
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        schedulers.put(gameRoom.getGameRoomId(), scheduler);
-
-        scheduler.scheduleAtFixedRate(() -> {
-            int time = gameRoomRoundTimes.get(gameRoom.getGameRoomId());
-            if (time > 0) {
-                time--;
-                gameRoomRoundTimes.put(gameRoom.getGameRoomId(), time);
-                System.out.println("Remaining time: " + time);
-            } else {
-                isTimerRunning.put(gameRoom.getGameRoomId(), false);
-                scheduler.shutdown();
-            }
-        },0, 1, TimeUnit.SECONDS);
     }
 
     public void stopTimer(GameRoom gameRoom) {
 
-        if (isTimerRunning.getOrDefault(gameRoom.getGameRoomId(), false)) {
+        if (redisHashGameRoomTemplate.opsForHash().get("hashKey:" + gameRoom.getGameRoomId(),
+                "isTimeRunning:").equals(true)) {
             ScheduledExecutorService scheduler = schedulers.get(gameRoom.getGameRoomId());
             if (scheduler != null) {
                 scheduler.shutdownNow();
@@ -188,12 +208,16 @@ public class CatchmindService extends CatchmindGameService {
 
         if(parseChattingMessage.getType().equals("CORRECT_ANSWER") && parseChattingMessage.getContent().equals(getCurrentAnswer(gameRoom))) {
             Map<Long, Integer> scores = gameRoomScores.get(gameRoom.getGameRoomId());
-            scores.merge(member.getMemberId(), 1, Integer::sum);
+            if(scores.get(member.getMemberId()) == null) {
+                scores.put(member.getMemberId(), 1);
+            } else {
+                scores.put(member.getMemberId(), scores.get(member.getMemberId()) + 1);
+            }
         }
     }
 
 
-    public void endRound(GameRoom gameRoom, Map<Long, Integer> scores) {
+    public void endRound(GameRoom gameRoom) {
         schedulers.get(gameRoom.getGameRoomId()).schedule(() -> {
 
             ChattingMessage chattingMessage = new ChattingMessage();
@@ -346,6 +370,7 @@ public class CatchmindService extends CatchmindGameService {
         redisHashGameRoomTemplate.opsForHash().put(gameRoomKey, "currentQuestionIndexes:", currentQuestionIndexes.get(gameRoom.getGameRoomId()));
         redisHashGameRoomTemplate.opsForHash().put(gameRoomKey, "gameRoomScores", gameRoomScores.get(gameRoom.getGameRoomId()));
         redisHashGameRoomTemplate.opsForHash().put(gameRoomKey, "isGameRunning:", isGameRunning);
+        redisHashGameRoomTemplate.opsForHash().put(gameRoomKey, "isTimeRunning:", isTimerRunning);
 
         String updatedJsonGameRoom = convertToFormattedJson(gameRoom);
         redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoom.getGameRoomId(), updatedJsonGameRoom);
