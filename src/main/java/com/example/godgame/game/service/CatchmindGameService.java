@@ -19,8 +19,7 @@ public abstract class CatchmindGameService implements GameService {
 
     public abstract boolean guessAnswer(GameRoom gameRoom, Member member, ChattingMessage parseChattingMessage);
 
-    public boolean endGame(GameRoom gameRoom, Map<Long, Integer> scores) {
-        return true;
+    public void endGame(GameRoom gameRoom, Map<Long, Integer> scores) {
     }
 
     @Override
