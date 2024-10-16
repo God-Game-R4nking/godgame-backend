@@ -224,58 +224,59 @@ public class CatchmindService extends CatchmindGameService {
 
 
     public void endRound(GameRoom gameRoom) {
-        schedulers.get(gameRoom.getGameRoomId()).schedule(() -> {
 
-            ChattingMessage chattingMessage = new ChattingMessage();
-            chattingMessage.setContent(currentAnswers.get(gameRoom.getGameRoomId()));
-            chattingMessage.setType("END_ROUND");
-            chattingMessage.setMemberId(memberService.findVerifiedNickName(currentDrawers.get(gameRoom.getGameRoomId())).getMemberId());
-            chattingMessage.setNickName(currentDrawers.get(gameRoom.getGameRoomId()));
+        // END_ROUND 메시지 전송
+        ChattingMessage chattingMessage = new ChattingMessage();
+        chattingMessage.setContent(currentAnswers.get(gameRoom.getGameRoomId()));
+        chattingMessage.setType("END_ROUND");
+        chattingMessage.setMemberId(memberService.findVerifiedNickName(currentDrawers.get(gameRoom.getGameRoomId())).getMemberId());
+        chattingMessage.setNickName(currentDrawers.get(gameRoom.getGameRoomId()));
+        chattingMessage.setGameRoomId(gameRoom.getGameRoomId());
+        chattingMessage.setCreatedAt(null);
+        String jsonString = "";
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            jsonString = objectMapper.writeValueAsString(chattingMessage);
+
+            System.out.println("END_ROUND jsonString : " + jsonString);
+            redisChattingMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getGameRoomId(), jsonString);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // 다음 라운드 처리
+        int currentIndex = currentQuestionIndexes.get(gameRoom.getGameRoomId()) + 1;
+        currentQuestionIndexes.put(gameRoom.getGameRoomId(), currentIndex);
+
+        List<Catchmind> questions = findRandomWord(currentIndex);
+
+        if (currentIndex <= questions.size()) {
+            // 새로운 문제와 출제자 설정
+            currentAnswers.put(gameRoom.getGameRoomId(), questions.get(0).getWord());
+            List<Long> memberIds = gameRoomMemberIds.get(gameRoom.getGameRoomId());
+            currentDrawers.put(gameRoom.getGameRoomId(), findNickname(memberIds.get(currentIndex % memberIds.size())));
+            saveGameRoomState(gameRoom);
+
+        } else {
+            // ALL_ROUND_END 메시지 전송
+            chattingMessage = new ChattingMessage();
+            chattingMessage.setContent(null);
+            chattingMessage.setType("ALL_ROUND_END");
+            chattingMessage.setMemberId(0);
+            chattingMessage.setNickName(null);
             chattingMessage.setGameRoomId(gameRoom.getGameRoomId());
             chattingMessage.setCreatedAt(null);
-            String jsonString = "";
+            jsonString = "";
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 jsonString = objectMapper.writeValueAsString(chattingMessage);
 
-                System.out.println("END_ROUND jsonString : " + jsonString);
+                System.out.println("ALL ROUND END jsonString : " + jsonString);
                 redisChattingMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getGameRoomId(), jsonString);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            int currentIndex = currentQuestionIndexes.get(gameRoom.getGameRoomId()) + 1;
-            currentQuestionIndexes.put(gameRoom.getGameRoomId(), currentIndex);
-
-            List<Catchmind> questions = findRandomWord(currentIndex);
-
-            if (currentIndex < questions.size()) {
-                currentAnswers.put(gameRoom.getGameRoomId(), questions.get(currentIndex).getWord());
-                List<Long> memberIds = gameRoomMemberIds.get(gameRoom.getGameRoomId());
-                currentDrawers.put(gameRoom.getGameRoomId(), findNickname(memberIds.get(currentIndex % memberIds.size())));
-                saveGameRoomState(gameRoom);
-
-            } else {
-
-                chattingMessage = new ChattingMessage();
-                chattingMessage.setContent(null);
-                chattingMessage.setType("ALL_ROUND_END");
-                chattingMessage.setMemberId(0);
-                chattingMessage.setNickName(null);
-                chattingMessage.setGameRoomId(gameRoom.getGameRoomId());
-                chattingMessage.setCreatedAt(null);
-                jsonString = "";
-                try {
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    jsonString = objectMapper.writeValueAsString(chattingMessage);
-
-                    System.out.println("ALL ROUND END jsonString : " + jsonString);
-                    redisChattingMessageTemplate.convertAndSend("gameRoom:" + gameRoom.getGameRoomId(), jsonString);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }, 5, TimeUnit.SECONDS);
+        }
     }
 
     @Override
