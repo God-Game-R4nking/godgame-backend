@@ -159,6 +159,7 @@ public class CatchmindService extends CatchmindGameService {
                 "isTimerRunning:").equals(false)) {
 
             isTimerRunning.put(gameRoom.getGameRoomId(), true);
+            redisHashGameRoomTemplate.opsForHash().put("hashKey:" + gameRoom.getGameRoomId(), "isTimerRunning:", isTimerRunning.get(gameRoom.getGameRoomId()));
             gameRoomRoundTimes.put(gameRoom.getGameRoomId(), 60);
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             schedulers.put(gameRoom.getGameRoomId(), scheduler);
@@ -206,6 +207,7 @@ public class CatchmindService extends CatchmindGameService {
                 schedulers.remove(gameRoom.getGameRoomId());
             }
             isTimerRunning.put(gameRoom.getGameRoomId(), false);
+            redisHashGameRoomTemplate.opsForHash().put("hashKey:" + gameRoom.getGameRoomId(), "isTimerRunning:", isTimerRunning.get(gameRoom.getGameRoomId()));
         }
     }
 
@@ -292,27 +294,26 @@ public class CatchmindService extends CatchmindGameService {
             member.setMemberGameStatus(MEMBER_WAIT);
         }
 
+        // redis에서 삭제
+        String gameRoomKey = "hashKey:" + gameRoom.getGameRoomId();
+        redisHashGameRoomTemplate.opsForHash().delete(gameRoomKey, "currentDrawers", currentDrawers.get(gameRoom.getGameRoomId()));
+        redisHashGameRoomTemplate.opsForHash().delete(gameRoomKey, "currentAnswers", currentAnswers.get(gameRoom.getGameRoomId()));
+        redisHashGameRoomTemplate.opsForHash().delete(gameRoomKey, "currentQuestionIndexes", currentQuestionIndexes.get(gameRoom.getGameRoomId()));
+        redisHashGameRoomTemplate.opsForHash().delete(gameRoomKey, "gameRoomScores", gameRoomScores.get(gameRoom.getGameRoomId()));
+        redisHashGameRoomTemplate.opsForHash().delete(gameRoomKey, "isGameRunning", isGameRunning);
+        redisHashGameRoomTemplate.opsForHash().delete(gameRoomKey, "isTimerRunning", isTimerRunning.get(gameRoom.getGameRoomId()));
+
+        // 게임방 상태 초기화
+        gameRoomMemberIds.remove(gameRoom.getGameRoomId());
+        currentDrawers.remove(gameRoom.getGameRoomId());
+        currentAnswers.remove(gameRoom.getGameRoomId());
+        currentQuestionIndexes.remove(gameRoom.getGameRoomId());
+        gameRoomScores.remove(gameRoom.getGameRoomId());
+        schedulers.remove(gameRoom.getGameRoomId());
+        isTimerRunning.remove(gameRoom.getGameRoomId());
+
         String updatedJsonGameRoom = convertToFormattedJson(gameRoom);
-        redisStringGameRoomTemplate.opsForValue().set("gameRoom:" + updatedJsonGameRoom, gameRoom);
-
-
-//        // redis에서 삭제
-//        String roomId = "gameRoom" + gameRoom.getGameRoomId();
-//        redisHashGameRoomTemplate.opsForHash().delete("currentDrawers", roomId);
-//        redisHashGameRoomTemplate.opsForHash().delete("currentAnswers", roomId);
-//        redisHashGameRoomTemplate.opsForHash().delete("currentQuestionIndexes", roomId);
-//        redisHashGameRoomTemplate.opsForHash().delete("gameRoomScores", roomId);
-//        redisHashGameRoomTemplate.opsForHash().delete("isGameRunning", roomId);
-//
-//        // 게임방 상태 초기화
-//        gameRoomMembers.remove(gameRoom);
-//        currentDrawers.remove(gameRoom);
-//        currentAnswers.remove(gameRoom);
-//        currentQuestionIndexes.remove(gameRoom);
-//        gameRoomScores.remove(gameRoom);
-//        schedulers.remove(gameRoom);
-//        isTimerRunning.remove(gameRoom);
-
+        redisGameRoomTemplate.opsForValue().set("gameRoom:" + gameRoom.getGameRoomId(), updatedJsonGameRoom);
     }
 
     @Override
