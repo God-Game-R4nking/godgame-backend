@@ -1,6 +1,6 @@
 
 <a href="https://club-project-one.vercel.app/" target="_blank">
-https://github.com/user-attachments/assets/7b24517a-2aa4-49b8-8a7f-b3646453ec3d
+![메인페이지](https://github.com/user-attachments/assets/7b24517a-2aa4-49b8-8a7f-b3646453ec3d)
 </a>
 
 <br/>
