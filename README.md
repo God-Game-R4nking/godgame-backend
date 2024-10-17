@@ -1,6 +1,6 @@
 
 <a href="https://club-project-one.vercel.app/" target="_blank">
-<img src="https://github.com/user-attachments/assets/6cc8dc09-b574-4d68-8185-e409722090a7" alt="배너" width="100%"/>
+https://github.com/user-attachments/assets/7b24517a-2aa4-49b8-8a7f-b3646453ec3d
 </a>
 
 <br/>
