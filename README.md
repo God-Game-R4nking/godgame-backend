@@ -1,66 +1,63 @@
-![메인페이지](https://github.com/user-attachments/assets/063836e1-f26f-4b7d-aa7e-ab8eda9d9769)
+# 
 
-<br/>
-<br/>
-
-# 0. Getting Started (시작하기)
-[서비스 링크](http://guild-master.s3-website.ap-northeast-2.amazonaws.com)
-
+https://github.com/user-attachments/assets/063836e1-f26f-4b7d-aa7e-ab8eda9d9769
 
 <br/>
 <br/>
 
 # 1. Project Overview (프로젝트 개요)
-- 프로젝트 이름: GUILD MASTER
-- 프로젝트 설명: 전국 게임 길드의 일정관리
+
+- 프로젝트 이름:    **다같이 즐기는 미니게임 플랫폼 - 같겜**  (GOD GAME)
+- 프로젝트 설명:    웹에서 사람들과 만나 게임을 즐길 수 있는 종합 게임 서비스
 
 <br/>
 <br/>
 
 # 2. Key Features (주요 기능)
 
-- **길드 관련 기능**:
-  - 길드 생성
-  - 길드 가입 요청
-  - 길드 가입 수락
-  - 길드원 조회
-  - 길드원 권환 변경
-  - 길드원 삭제
-  - 길드 탈퇴
-
-- **이벤트 관련 기능**:
-  - 이벤트 생성
-  - 특정 길드의 전체 이벤트 조회
-  - 이벤트 참여자 조회
-  - 이벤트 참여자 관리
-  - 참여가능 이벤트 조회
-  - 이벤트 참가
-  - 종료된 이벤트 조회
-  - 이벤트 참여자 통계 조회
-
-- **멤버 관련 기능**:
-  - 회원 가입
-  - 로그인
-  - 로그 아웃
-  - 회원 탈퇴
-
+- **게시판 관련 기능**:
+    - 게시글 작성
+    - 게시글 수정
+    - 게시글 삭제
+    - 게시글 댓글 작성
+    - 게시글 댓글 수정
+    - 게시글 댓글 삭제
+- **게임 방 관련 기능**:
+    - 게임 방 생성
+    - 게임 방 참여
+    - 게임 방 나가기
+    - 게임 시작
+    - 게임 방 회원간의 실시간 채팅
+- 미니게임 관련 기능:
+    - 캐치마인드 그림판
+    - 캐치마인드 실시간 채팅
+    - 캐치마인드 실시간 그림 그리기
+    - 캐치마인드 채팅 속 정답 맞히기
+    - 캐치마인드 라운드 시작 및 종료
+- **회원 관련 기능**:
+    - 회원 가입
+    - 비밀 번호 변경
+    - 비밀 번호 찾기
+    - 로그인
+    - 로그 아웃
+    - 회원 탈퇴
+- 랭킹 관련 기능:
+    - 현재 회원 중 랭킹 표시
 
 <br/>
 <br/>
 
 # 3.📝 관련 문서
 
-#### [📌 요구사항 정의서](https://docs.google.com/spreadsheets/d/1gfuB42EHzzEN3mD6FSUGyY0NquEv6dH_eMiSqoHsKfw/edit?gid=626989714#gid=626989714)
+### [📌 요구사항 정의서](https://docs.google.com/spreadsheets/d/1xIquU97u7FLaCzdQ7IQ_Gd_LWD4lePRd3PV9OQqzBtE/edit?gid=0#gid=0)
 
-#### [📌 화면 정의서](https://docs.google.com/spreadsheets/d/1gfuB42EHzzEN3mD6FSUGyY0NquEv6dH_eMiSqoHsKfw/edit?gid=626989714#gid=626989714)
+### [📌 API 명세서](https://docs.google.com/spreadsheets/d/1ha0STK_N42XSImCum-KUFX9bxTvhNb4hXmb0svQ9ovs/edit?usp=sharing)
 
-#### [📌 API 명세서](https://docs.google.com/spreadsheets/d/1gfuB42EHzzEN3mD6FSUGyY0NquEv6dH_eMiSqoHsKfw/edit?gid=626989714#gid=626989714)
+### [📌 목업](https://www.figma.com/design/aUvTEyeOsTveeuSJIm8KqB/%EA%B0%99%EA%B2%9C?node-id=0-1&node-type=canvas&t=O5X0msGJeWmxdJZ8-0)
 
-#### [📌 목업](https://www.figma.com/design/FkIf92PUj6Xm0VBKQf7PiN/guild_master?node-id=0-1&node-type=CANVAS&t=Cbia6DL9dtJyyfi5-0)
+### [📌 ERD](https://dbdiagram.io/d/%EA%B0%99%EA%B2%9C-66f5f96e3430cb846cc5306f)
 
-#### [📌 ERD](https://www.erdcloud.com/d/obCDwgdFdnJP5F8js)
-
-![ERD  GrowStory_final](https://github.com/user-attachments/assets/5ec4f06e-3f57-4629-aa63-05d9647d7d01)
+![같겜.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/73fc2512-9191-4885-94de-87e3545a39dd/c3b7800d-d2cb-4c6d-8a26-4f1e94a940e3/%EA%B0%99%EA%B2%9C.png)
 
 <br>
 
@@ -68,45 +65,49 @@
 <br/>
 
 # 4. Tasks & Responsibilities (작업 및 역할 분담)
+
 |  |  |  |
-|-----------------|-----------------|-----------------|
-| 👑<br>   노영준   |  <img src="https://github.com/user-attachments/assets/f39bd0e9-f755-4871-af99-69c3371c4141" alt="노영준" width="100"> | <ul><li>프로젝트 계획 및 관리</li><li>팀 리딩 및 커뮤니케이션</li><li>JWT Security 구현</li></li><li>전반적인 UI/UX 구현</li></ul>     |
-|   박원일   |  <img src="https://github.com/user-attachments/assets/5e34d335-fead-47a9-89c2-e9da7dc840fe" alt="박원일" width="100">| <ul><li>길드 검색, 길드 보드, 길드원 관리 페이지 게시판 제작</li><li>길드, 이벤트 조회 및 상세 확인, 길드원 가입 신청 및 수락 기능</li><li>Axios 를 활용한 백엔드와의 비동기 통신 구현</li><li>페이지별 컴포넌트 세분화 및 코드 베이스 일관화</li></ul> |
-|   김영진   |  <img src="https://github.com/user-attachments/assets/7c176a31-3971-4268-af8b-d9068a443f2d" alt="김영진" width="100">    |<ul><li>테이블 설계 및 객체 연관 관계 매핑</li><li>인증, 인가를 위한 시큐리티 적용 및 JWT 구현 </li><li>레디스를 활용한 로그아웃 구현</li><li>계층 구조에 따른 회원가입, 길드 가입요청, 가입요청수락 등 전반적인 핵심 서비스 로직 구현</li><li>전역 예외 처리 구현</li></ul>  |
-|   유정균    |  <img src="https://github.com/user-attachments/assets/153721c5-8f8f-4dd2-a3f6-2dea79f96904" alt="유정균" width="100">    | <ul><li>길드 이벤트 CRUD 기능 설계 및 구현</li><li>길드원 이벤트 참가 기능 개발</li><li>이벤트 참가자 정보 관리 및 통계 구현</li><li>요구사항 분석을 통한 테이블 관계 정의 및 ERD 정규화</li><li>AWS 클라우드 인프라 배포</li></ul>    |
+| --- | --- | --- |
+| 👑<br>   노영준 | <img src="https://github.com/user-attachments/assets/f39bd0e9-f755-4871-af99-69c3371c4141" alt="노영준" width="100"> | <ul><li>회원∙Spring Security 구현</li><li>WebSocket 통신 설정 및 구현 (BE, FE)</li><li>캐치마인드 서비스 API 구현</li></li><li>FE 캐치마인드 서비스 동작 구현  </li></ul> |
+| 박원일 | <img src="https://github.com/user-attachments/assets/5e34d335-fead-47a9-89c2-e9da7dc840fe" alt="박원일" width="100"> | <ul><li>게시판∙댓글∙차단기능 구현</li><li> 게임별 기초 데이터 생성</li><li>WebSocket 및 Redis를 활용한 캐치마인드 서비스 구현</li></ul> |
+| 김영진 | <img src="https://github.com/user-attachments/assets/7c176a31-3971-4268-af8b-d9068a443f2d" alt="김영진" width="100"> | <ul><li></li></ul> |
+| 유정균 | <img src="https://github.com/user-attachments/assets/153721c5-8f8f-4dd2-a3f6-2dea79f96904" alt="유정균" width="100"> | <ul><li>UI/UX 구현</li><li>서버 연동</li><li>게시판 API 구현</li></ul> |
 
 <br/>
 <br/>
 
 # 5. Technology Stack (기술 스택)
+
 ### 🔨 Front-end
+
 | Html | JavaScript | React | CSS |
-| :---: | :---: | :---: | :---: |
+| --- | --- | --- | --- |
 | <img alt="Html" src ="https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/HTML5_logo_and_wordmark.svg/440px-HTML5_logo_and_wordmark.svg.png" width="65" height="65" /> | <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/js-icon.svg" alt="icon" width="75" height="75" /></div> | <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/react-icon.svg" alt="icon" width="65" height="65" /></div> | <div style="display: flex; align-items: flex-start;"><img src="https://github.com/user-attachments/assets/8e99f402-391a-45f6-9312-05be3ce887f0" alt="icon" width="65" height="65" /></div> |
-<br/>
+| <br/> |  |  |  |
 
 ### ⛏ Back-end
-| Java |  Spring | Spring<br>Boot |
-| :---: | :---: | :---: |
-| <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/java-icon.svg" alt="icon" width="65" height="65" /></div> |   <img alt="spring logo" src="https://www.vectorlogo.zone/logos/springio/springio-icon.svg" height="50" width="50" > | <img alt="spring-boot logo" src="https://t1.daumcdn.net/cfile/tistory/27034D4F58E660F616" width="65" height="65" > |
-<br/>
+
+| Java | Spring | Spring<br>Boot | WebSocket |
+| --- | --- | --- | --- |
+| <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/java-icon.svg" alt="icon" width="65" height="65" /></div> | <img alt="spring logo" src="https://www.vectorlogo.zone/logos/springio/springio-icon.svg" height="50" width="50" > | <img alt="spring-boot logo" src="https://t1.daumcdn.net/cfile/tistory/27034D4F58E660F616" width="65" height="65" > | <img alt="spring-boot logo" src="https://github.com/user-attachments/assets/9b1f252a-7243-4139-a6ae-39b155c1ce72" width="65" height="65" > |
+| <br/> |  |  |  |
 
 ### ⛏ Database & Caching
+
 | mySQL | Redis |
-| :---: | :---: |
+| --- | --- |
 | <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/mysql-icon.svg" alt="icon" width="65" height="65" /></div> | <div style="display: flex; align-items: flex-start;"><img src="https://github.com/user-attachments/assets/ee9ac300-f713-4b48-9bc2-9f5ec1774ae9" alt="icon" width="65" height="65" /></div> |
-<br/>
+| <br/> |  |
 
 ### ⛏ Cloud & Tools
+
 | AWS | GitHub |
-| :---: | :---: |
+| --- | --- |
 | <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/aws-icon.svg" alt="icon" width="65" height="65" /></div> | <div style="display: flex; align-items: flex-start;"><img src="https://github.com/user-attachments/assets/99385abd-987c-47bc-b63d-c949123c90e5" alt="icon" width="65" height="65" /></div> |
-<br/>
-
-
-
+| <br/> |  |
 
 # 6. Project Structure (프로젝트 구조)
+
 <br>
 <details>
 
@@ -148,7 +149,7 @@
 │  │  ├─ Modal.js
 │  │  ├─ OutPut.js
 │  │  └─ RegistInput.js
-│  ├─ image 
+│  ├─ image
 │  │  ├─ loastark.png
 │  │  ├─ lol.png
 │  │  ├─ overwatch.png
@@ -323,6 +324,7 @@
             └─ continewbie
                └─ guild_master
                   └─ GuildMasterApplicationTests.java
+
 ```
 
 <br>
@@ -333,14 +335,6 @@
 
 ## 7. 구현 이미지
 
-| 페이지(기능)         | 이미지                                                                                                                          |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| 메인페이지 및 회원 가입   | ![회원 가입 페이지](https://github.com/user-attachments/assets/bb76dd95-8810-4797-8d5a-d96b4ffaf265)             |
-| 로그인                | ![로그인 페이지](https://github.com/user-attachments/assets/5c80df38-5641-46f0-a818-842c20ebf2ff)                |
-| 길드 검색<br>하기         | ![길드 검색 페이지](https://github.com/user-attachments/assets/765f13b6-87b9-4494-9a8e-6c35443be3ed)         |
-| 길드 가입<br>신청하기    | ![길드 검색 페이지](https://github.com/user-attachments/assets/d430e15d-d88e-495d-b87e-e31b2f3da18f)           |
-| 길드 가입<br>승낙하기 | ![길드 페이지](https://github.com/user-attachments/assets/fb10edfe-dbf5-442e-83a0-0901657ba4bb) |
-| 이벤트 <br>생성하기  | ![길드 페이지](https://github.com/user-attachments/assets/7d4bef47-0318-4f36-b6fe-e319ec60ac12)                |
-| 이벤트  <br>참여하기        | ![길드 페이지](https://github.com/user-attachments/assets/c07aa239-55a1-45b6-a5a9-c64f29f4169c)               |
+[제목 없음](https://www.notion.so/09d3c27a1d024613b0ba3e5c98978e45?pvs=21)
 
 <br>
