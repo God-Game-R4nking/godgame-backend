@@ -61,7 +61,7 @@
 
 ### [📌 ERD](https://dbdiagram.io/d/%EA%B0%99%EA%B2%9C-66f5f96e3430cb846cc5306f)
 
-![같겜.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/73fc2512-9191-4885-94de-87e3545a39dd/c3b7800d-d2cb-4c6d-8a26-4f1e94a940e3/%EA%B0%99%EA%B2%9C.png)
+![같겜](https://github.com/user-attachments/assets/c0691d20-0291-4a59-9ca0-775c49184cd2)
 
 <br>
 
