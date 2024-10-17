@@ -1,5 +1,4 @@
-[![메인페이지](https://github.com/user-attachments/assets/7b24517a-2aa4-49b8-8a7f-b3646453ec3d)](https://github.com/user-attachments/assets/34f71619-195f-4645-a46e-ca44bd036032)
-
+![메인페이지](https://github.com/user-attachments/assets/063836e1-f26f-4b7d-aa7e-ab8eda9d9769)
 
 <br/>
 <br/>
