@@ -1,6 +1,6 @@
-# 
+# 다같이 즐기는 미니게임 플랫폼 - 같겜 (GOD GAME)
 
-https://github.com/user-attachments/assets/063836e1-f26f-4b7d-aa7e-ab8eda9d9769
+![메인페이지](https://github.com/user-attachments/assets/c66047f1-a940-4a1f-a22e-dee6e15c4153)
 
 <br/>
 <br/>
@@ -22,18 +22,21 @@ https://github.com/user-attachments/assets/063836e1-f26f-4b7d-aa7e-ab8eda9d9769
     - 게시글 댓글 작성
     - 게시글 댓글 수정
     - 게시글 댓글 삭제
+
 - **게임 방 관련 기능**:
     - 게임 방 생성
     - 게임 방 참여
     - 게임 방 나가기
     - 게임 시작
     - 게임 방 회원간의 실시간 채팅
+
 - 미니게임 관련 기능:
     - 캐치마인드 그림판
     - 캐치마인드 실시간 채팅
     - 캐치마인드 실시간 그림 그리기
     - 캐치마인드 채팅 속 정답 맞히기
     - 캐치마인드 라운드 시작 및 종료
+
 - **회원 관련 기능**:
     - 회원 가입
     - 비밀 번호 변경
@@ -41,6 +44,7 @@ https://github.com/user-attachments/assets/063836e1-f26f-4b7d-aa7e-ab8eda9d9769
     - 로그인
     - 로그 아웃
     - 회원 탈퇴
+
 - 랭킹 관련 기능:
     - 현재 회원 중 랭킹 표시
 
@@ -87,17 +91,17 @@ https://github.com/user-attachments/assets/063836e1-f26f-4b7d-aa7e-ab8eda9d9769
 
 ### ⛏ Back-end
 
-| Java | Spring | Spring<br>Boot | WebSocket |
-| --- | --- | --- | --- |
-| <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/java-icon.svg" alt="icon" width="65" height="65" /></div> | <img alt="spring logo" src="https://www.vectorlogo.zone/logos/springio/springio-icon.svg" height="50" width="50" > | <img alt="spring-boot logo" src="https://t1.daumcdn.net/cfile/tistory/27034D4F58E660F616" width="65" height="65" > | <img alt="spring-boot logo" src="https://github.com/user-attachments/assets/9b1f252a-7243-4139-a6ae-39b155c1ce72" width="65" height="65" > |
-| <br/> |  |  |  |
+| Java | Spring | Spring<br>Boot |
+| --- | --- | --- |
+| <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/java-icon.svg" alt="icon" width="65" height="65" /></div> | <img alt="spring logo" src="https://www.vectorlogo.zone/logos/springio/springio-icon.svg" height="50" width="50" > | <img alt="spring-boot logo" src="https://t1.daumcdn.net/cfile/tistory/27034D4F58E660F616" width="65" height="65" > |
+| <br/> |  |  |
 
 ### ⛏ Database & Caching
 
-| mySQL | Redis |
-| --- | --- |
-| <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/mysql-icon.svg" alt="icon" width="65" height="65" /></div> | <div style="display: flex; align-items: flex-start;"><img src="https://github.com/user-attachments/assets/ee9ac300-f713-4b48-9bc2-9f5ec1774ae9" alt="icon" width="65" height="65" /></div> |
-| <br/> |  |
+| mySQL | Redis | Redis |
+| --- | --- | --- |
+| <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/mysql-icon.svg" alt="icon" width="65" height="65" /></div> | <div style="display: flex; align-items: flex-start;"><img src="https://github.com/user-attachments/assets/ee9ac300-f713-4b48-9bc2-9f5ec1774ae9" alt="icon" width="65" height="65" /></div> | <div style="display: flex; align-items: flex-start;"><img src="https://github.com/user-attachments/assets/780ec5d5-9990-4caa-a2b7-8d0af017e424" alt="icon" width="65" height="65" /></div> |
+| <br/> |  |  |
 
 ### ⛏ Cloud & Tools
 
@@ -106,235 +110,24 @@ https://github.com/user-attachments/assets/063836e1-f26f-4b7d-aa7e-ab8eda9d9769
 | <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/aws-icon.svg" alt="icon" width="65" height="65" /></div> | <div style="display: flex; align-items: flex-start;"><img src="https://github.com/user-attachments/assets/99385abd-987c-47bc-b63d-c949123c90e5" alt="icon" width="65" height="65" /></div> |
 | <br/> |  |
 
-# 6. Project Structure (프로젝트 구조)
-
-<br>
-<details>
-
-<summary> 📂 프로젝트 폴더 구조</summary>
-
-```
-🏠 guild-master
-├─ 📂 client
-│  │─ .env.sample
-│  │─ .eslintrc.json  ──────────────── ⚙️ eslint 설정 파일
-│  │─ .gitignore
-│  │─ .prettierrc.json ─────────────── ⚙️ prettier 설정 파일
-│  │─ package-lock.json
-│  │─ package.json
-│  │
-│  ├─ ├─ public
-├─  src
-│  ├─ App.css
-│  ├─ App.js
-│  ├─ Global.css
-│  ├─ auth ─────────────────────────────── 🙋‍♂️ 로그인 전역 관리 파일
-│  │  ├─ UsePersistedState.jsx
-│  │  └─ index.jsx
-│  ├─ component ────────────────────────── 🗂️ 각 페이지에서 사용되는 컴포넌트
-│  │  ├─ GuildBoardPage
-│  │  ├─ GuildListPage
-│  │  ├─ HomePage
-│  │  ├─ SignUpPage
-│  │  ├─ ManagePage
-│  │  │  ├─ ManagePlayerTab.js
-│  │  │  ├─ PlayerItem.js
-│  │  │  ├─ PlayerList.js
-│  │  │  ├─ PlayersItem.js
-│  │  │  ├─ Tab.js
-│  │  │  ├─ WaitList.js
-│  │  │  ├─ WaitPlayersItem.js
-│  │  │  └─ memberGuildData.js
-│  │  ├─ LargeModal.js ──────────────────── 🗂️ 모든 페이지에서 공통으로 사용되는 컴포넌트
-│  │  ├─ Modal.js
-│  │  ├─ OutPut.js
-│  │  └─ RegistInput.js
-│  ├─ image
-│  │  ├─ loastark.png
-│  │  ├─ lol.png
-│  │  ├─ overwatch.png
-│  │  └─ valorant.png
-│  ├─ logo
-│  │  ├─ fulllogo_white.png
-│  │  ├─ fulllogo_white_big.png
-│  │  └─ logo_white.png
-│  ├─ pages ─────────────────────────────── 🗂️ 라우팅이 적용된 API를 요청하는 페이지 컴포넌트
-│  │  ├─ GlobalHeader.js
-│  │  ├─ GuildBoardPage.js
-│  │  ├─ GuildListPage.js
-│  │  ├─ HomePage.js
-│  │  ├─ LandingPage.js
-│  │  ├─ LoginPage.js
-│  │  ├─ ManagePage.js
-│  │  ├─ MyPage.js
-│  │  └─ SignUpPage.js
-│  │
-│  ├─setupTests.js
-│  ├─ index.css
-│  ├─ index.js
-│  └─ logo.svg
-│
-└─ 📂 server
-   │─ .gitignore
-   │─ build.gradle
-   │─ gradlew
-   │─ gradlew.bat
-   │─ settings.gradle
-   │
-   ├─ 📂 gradle-wrapper
-   │  ├─ gradle-wrapper.jar
-   │  └─ gradle-wrapper.properties
-   │
-   └─ └─ src
-   ├─ main
-   │  └─ java
-   │     └─ com
-   │        └─ continewbie
-   │           └─ guild_master
-   │              ├─ GuildMasterApplication.java
-   │              ├─ advice
-   │              │  └─ GlobalExceptionAdvice.java
-   │              ├─ auditable
-   │              │  └─ Auditable.java
-   │              ├─ auth
-   │              │  ├─ controller
-   │              │  │  └─ AuthController.java
-   │              │  ├─ dto
-   │              │  │  └─ LoginDto.java
-   │              │  ├─ filter
-   │              │  │  ├─ JwtAuthenticationFilter.java
-   │              │  │  └─ JwtVerificationFilter.java
-   │              │  ├─ handler
-   │              │  │  ├─ MemberAccessDeniedHandler.java
-   │              │  │  ├─ MemberAuthenticationEntryPoint.java
-   │              │  │  ├─ MemberAuthenticationFailureHandler.java
-   │              │  │  └─ MemberAuthenticationSuccessHandler.java
-   │              │  ├─ jwt
-   │              │  │  └─ JwtTokenizer.java
-   │              │  ├─ service
-   │              │  │  └─ AuthService.java
-   │              │  ├─ userDetails
-   │              │  │  └─ MemberDetailsService.java
-   │              │  └─ utils
-   │              │     ├─ ErrorResponse.java
-   │              │     └─ JwtAuthorityUtils.java
-   │              ├─ config
-   │              │  └─ SecurityConfiguration.java
-   │              ├─ dto
-   │              │  ├─ MultiResponseDto.java
-   │              │  ├─ PageInfo.java
-   │              │  └─ SingleResponseDto.java
-   │              ├─ errorresponse
-   │              │  └─ ErrorResponse.java
-   │              ├─ event
-   │              │  ├─ controller
-   │              │  │  └─ EventController.java
-   │              │  ├─ dto
-   │              │  │  └─ EventDto.java
-   │              │  ├─ entity
-   │              │  │  └─ Event.java
-   │              │  ├─ mapper
-   │              │  │  └─ EventMapper.java
-   │              │  ├─ repository
-   │              │  │  └─ EventRepository.java
-   │              │  └─ service
-   │              │     └─ EventService.java
-   │              ├─ exception
-   │              │  ├─ BusinessLogicException.java
-   │              │  └─ ExceptionCode.java
-   │              ├─ game
-   │              │  ├─ controller
-   │              │  │  └─ GameController.java
-   │              │  ├─ dto
-   │              │  │  └─ GameDto.java
-   │              │  ├─ entity
-   │              │  │  └─ Game.java
-   │              │  ├─ mapper
-   │              │  │  └─ GameMapper.java
-   │              │  ├─ repository
-   │              │  │  └─ GameRepository.java
-   │              │  └─ service
-   │              │     └─ GameService.java
-   │              ├─ guild
-   │              │  ├─ controller
-   │              │  │  └─ GuildController.java
-   │              │  ├─ dto
-   │              │  │  └─ GuildDto.java
-   │              │  ├─ entity
-   │              │  │  └─ Guild.java
-   │              │  ├─ mapper
-   │              │  │  └─ GuildMapper.java
-   │              │  ├─ repository
-   │              │  │  └─ GuildRepository.java
-   │              │  └─ service
-   │              │     └─ GuildService.java
-   │              ├─ helper
-   │              │  └─ event
-   │              │     └─ MemberRegistrationApplicationEvent.java
-   │              ├─ member
-   │              │  ├─ controller
-   │              │  │  └─ MemberController.java
-   │              │  ├─ dto
-   │              │  │  └─ MemberDto.java
-   │              │  ├─ entity
-   │              │  │  └─ Member.java
-   │              │  ├─ mapper
-   │              │  │  └─ MemberMapper.java
-   │              │  ├─ repository
-   │              │  │  └─ MemberRepository.java
-   │              │  └─ service
-   │              │     └─ MemberService.java
-   │              ├─ memberguild
-   │              │  ├─ dto
-   │              │  │  └─ MemberGuildDto.java
-   │              │  ├─ entity
-   │              │  │  └─ MemberGuild.java
-   │              │  └─ mapper
-   │              │     └─ MemberGuildMapper.java
-   │              ├─ memeberevent
-   │              │  ├─ dto
-   │              │  │  ├─ MemberEventDto.java
-   │              │  │  └─ MemberEventResponseDto.java
-   │              │  ├─ entity
-   │              │  │  └─ MemberEvent.java
-   │              │  ├─ mapper
-   │              │  │  └─ MemberEventMapper.java
-   │              │  └─ repository
-   │              │     └─ MemberEventRepository.java
-   │              ├─ position
-   │              │  ├─ dto
-   │              │  │  └─ PositionDto.java
-   │              │  ├─ entity
-   │              │  │  └─ Position.java
-   │              │  └─ repository
-   │              │     └─ PositionRepository.java
-   │              ├─ redis
-   │              │  └─ RedisRepositoryConfig.java
-   │              └─ utils
-   │                 ├─ CustomBeanUtils.java
-   │                 ├─ DataInitializer.java
-   │                 ├─ UriCreator.java
-   │                 └─ validator
-   │                    ├─ InvalidEventDateException.java
-   │                    ├─ NotSpace.java
-   │                    └─ NotSpaceValidator.java
-   └─ test
-      └─ java
-         └─ com
-            └─ continewbie
-               └─ guild_master
-                  └─ GuildMasterApplicationTests.java
-
-```
-
-<br>
-<br/>
-</details>
-<br>
-<br/>
-
 ## 7. 구현 이미지
 
-[제목 없음](https://www.notion.so/09d3c27a1d024613b0ba3e5c98978e45?pvs=21)
+| 페이지(기능)                | 이미지                                                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 메인<br>페이지                   | ![메인페이지](https://github.com/user-attachments/assets/678eda64-dbc8-43ad-802d-b2c260858601)             |
+| 본인인증                     | ![본인인증](https://github.com/user-attachments/assets/39f2b8d4-b221-4106-a121-97733ecc880c)             |
+| 회원가입 예외처리        | ![회원가입 예외](https://github.com/user-attachments/assets/0f9641ef-59ca-4292-ad54-b4ba64276152)         |
+| 회원가입<br>하기            | ![회원가입 하기](https://github.com/user-attachments/assets/c0406a43-6dd1-42b9-8ded-6afa97bf9fcb)           |
+| 로그인<br>하기              | ![로그인-배속](https://github.com/user-attachments/assets/4b9fb1e6-bc51-4d09-86e4-aacd9af7b554) |
+| 로그아웃<br>하기            | ![로그아웃](https://github.com/user-attachments/assets/d1db1d74-e06b-4665-9f12-9fd163c4ae73)              |
+| 공지사항                    | ![공지사항](https://github.com/user-attachments/assets/01eefdcc-493a-4201-9b89-62c311fa399d)               |
+| 친구                         | ![친구보기](https://github.com/user-attachments/assets/d809ff75-4ff2-4b52-889d-115e70f01d12)              |
+| 게시판                      | ![게시판](https://github.com/user-attachments/assets/6765f7f7-8149-4ee0-9d7b-d98e8c18b54f)               |
+| 게임방<br>찾기              | ![게임방 찾기](https://github.com/user-attachments/assets/24d70f86-a8ea-4ca6-b5b7-239367e72ecd)               |
+| 게임과정<br>및 실시간 통신 | ![게임 과정](https://github.com/user-attachments/assets/85a6d92e-bd46-4812-b0ae-725f00e53340)               |
+| 그림판<br>기능              | ![그림판 기능](https://github.com/user-attachments/assets/d288226d-dd24-4faa-b06d-d563cda547f1)               |
+
+
+
 
 <br>
