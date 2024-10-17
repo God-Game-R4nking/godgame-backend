@@ -74,7 +74,7 @@
 | --- | --- | --- |
 | 👑<br>   노영준 | <img src="https://github.com/user-attachments/assets/f39bd0e9-f755-4871-af99-69c3371c4141" alt="노영준" width="100"> | <ul><li>회원∙Spring Security 구현</li><li>WebSocket 통신 설정 및 구현 (BE, FE)</li><li>캐치마인드 서비스 API 구현</li></li><li>FE 캐치마인드 서비스 동작 구현  </li></ul> |
 | 박원일 | <img src="https://github.com/user-attachments/assets/5e34d335-fead-47a9-89c2-e9da7dc840fe" alt="박원일" width="100"> | <ul><li>게시판∙댓글∙차단기능 구현</li><li> 게임별 기초 데이터 생성</li><li>WebSocket 및 Redis를 활용한 캐치마인드 서비스 구현</li></ul> |
-| 김영진 | <img src="https://github.com/user-attachments/assets/7c176a31-3971-4268-af8b-d9068a443f2d" alt="김영진" width="100"> | <ul><li></li></ul> |
+| 김영진 | <img src="https://github.com/user-attachments/assets/7c176a31-3971-4268-af8b-d9068a443f2d" alt="김영진" width="100"> | <ul><li>Redis를 활용한 게임룸 생성 및 관리 기능 구현</li><li>MongoDB를 활용한 채팅 내역 저장 기능 개발</li><li>데이터 모델링 및 쿼리 최적화</li></ul> |
 | 유정균 | <img src="https://github.com/user-attachments/assets/153721c5-8f8f-4dd2-a3f6-2dea79f96904" alt="유정균" width="100"> | <ul><li>UI/UX 구현</li><li>서버 연동</li><li>게시판 API 구현</li></ul> |
 
 <br/>
@@ -98,7 +98,7 @@
 
 ### ⛏ Database & Caching
 
-| mySQL | Redis | Redis |
+| mySQL | Redis | MongoDB |
 | --- | --- | --- |
 | <div style="display: flex; align-items: flex-start;"><img src="https://techstack-generator.vercel.app/mysql-icon.svg" alt="icon" width="65" height="65" /></div> | <div style="display: flex; align-items: flex-start;"><img src="https://github.com/user-attachments/assets/ee9ac300-f713-4b48-9bc2-9f5ec1774ae9" alt="icon" width="65" height="65" /></div> | <div style="display: flex; align-items: flex-start;"><img src="https://github.com/user-attachments/assets/780ec5d5-9990-4caa-a2b7-8d0af017e424" alt="icon" width="65" height="65" /></div> |
 | <br/> |  |  |
